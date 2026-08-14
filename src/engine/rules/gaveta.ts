@@ -15,8 +15,8 @@ export interface GavetaBox {
   largura: number // largura disponível p/ a gaveta
   profundidade: number // profundidade da gaveta
   altura: number // altura da caixa da gaveta
-  sistema: 'telescopica' | 'invisivel'
-  espessura: number
+  sistema?: 'telescopica' | 'invisivel' // default: telescopica
+  espessura?: number // default: rules.gavetaEspessuraLateral
 }
 
 export function computeGavetaCaixa(
