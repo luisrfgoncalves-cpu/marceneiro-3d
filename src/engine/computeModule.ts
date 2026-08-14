@@ -8,6 +8,7 @@ import { sanitizeModule } from './sanitize'
 import { computeBalcao } from './modules/balcao'
 import { computeGaveteiro } from './modules/gaveteiro'
 import { computeArmario } from './modules/armario'
+import { computeHome } from './modules/home'
 import type { Hinge, ModuloConfig, ModuleResult, Piece, Piston, SistemaFundo } from './types'
 
 const AREAS_MOLHADAS = new Set(['banheiro', 'area_servico'])
@@ -40,6 +41,11 @@ export function computeModule(config: ModuloConfig, rules: EngineRules): ModuleR
     pieces = r.pieces
     hinges = r.hinges
     extraWarnings = r.warnings
+  } else if (cfg.moduloTipo === 'home') {
+    const r = computeHome(cfg, rules)
+    pieces = r.pieces
+    hinges = r.hinges
+    pistons = r.pistons
   } else if (TIPOS_CAIXARIA.includes(cfg.moduloTipo)) {
     const r = computeArmario(cfg, rules)
     pieces = r.pieces
@@ -50,6 +56,18 @@ export function computeModule(config: ModuloConfig, rules: EngineRules): ModuleR
 
   const piecesWithBand = applyEdgeBanding(pieces, config)
   const warnings = [...extraWarnings, ...validate(piecesWithBand, rules)]
+
+  if (
+    config.gavetas.quantidade > 0 &&
+    config.gavetas.sistema === 'invisivel' &&
+    config.gavetas.espessura !== 15
+  ) {
+    warnings.push({
+      type: 'gaveta_invalida' as any,
+      pieceName: 'Gavetas',
+      message: 'A corrediça invisível (slow) exige gaveta com espessura de 15mm.',
+    })
+  }
 
   return {
     pieces: piecesWithBand,

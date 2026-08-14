@@ -147,6 +147,35 @@ export function guardaRoupa4Portas(overrides: Partial<ModuloConfig> = {}): Modul
   })
 }
 
+export function homeRack(overrides: Partial<ModuloConfig> = {}): ModuloConfig {
+  return {
+    moduloTipo: 'home',
+    ambiente: 'sala',
+    nome: 'Home / Rack',
+    largura: 1600,
+    altura: 600,
+    profundidade: 450,
+    espessuraCaixa: 18,
+    materialInterno: MDF_BRANCO_15,
+    materialExterno: MDF_MADERADO_18,
+    fitaBorda: FITA_MADERADO,
+    portas: { quantidade: 2, tipo: 'solteira', dobradicasPorPorta: 2, espessura: 18 },
+    gavetas: { quantidade: 0, sistema: 'telescopica', espessura: 15 },
+    sistemaFundo: 'sem_fundo',
+    taponamento: {
+      esquerda: { ativo: false, avancao: 0, espessura: 18 },
+      direita: { ativo: false, avancao: 0, espessura: 18 },
+    },
+    rodape: { ativo: false, altura: 0, recuo: 0, material: 'mdf' },
+    tampo: { espessura: 18, pingadeiraFrente: 0, pingadeiraLados: 0 },
+    montantes: { ativo: false, deitado: true, largura: 50, espessura: 18 },
+    orelhinha: { ativo: false, largura: 30 },
+    prateleiras: { quantidade: 1, espessura: 15 },
+    sapateiras: { quantidade: 0 },
+    ...overrides,
+  }
+}
+
 export interface ModuleTemplate {
   id: string
   nome: string
@@ -162,4 +191,5 @@ export const MODULE_TEMPLATES: ModuleTemplate[] = [
   { id: 'aereo_2p', nome: 'Aéreo 2 portas', descricao: 'Armário suspenso, sem rodapé', cria: aereo2Portas },
   { id: 'torre', nome: 'Torre', descricao: 'Módulo alto com prateleiras', cria: torre },
   { id: 'guarda_roupa_4p', nome: 'Guarda-roupa 4 portas', descricao: 'Grande com portas casal', cria: guardaRoupa4Portas },
+  { id: 'home_rack', nome: 'Home / Rack', descricao: 'Módulo para sala com configuração livre', cria: homeRack },
 ]

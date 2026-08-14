@@ -8,6 +8,8 @@ import type { EngineRules } from '../engine/rules'
 import { EnvironmentScene } from '../three/EnvironmentScene'
 import { fmtLength, useUnitPref } from '../lib/units'
 
+import { useAutoAnimate } from '@formkit/auto-animate/react'
+
 const AMBIENTE_LABEL: Record<string, string> = {
   cozinha: 'Cozinha',
   dormitorio: 'Dormitório',
@@ -42,6 +44,7 @@ export function Environment({
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [unit] = useUnitPref()
+  const [parentRef] = useAutoAnimate()
 
   const { pieces, placed, totalWidth } = useMemo(() => layoutEnvironment(project, rules), [project, rules])
   const depth = useMemo(
@@ -113,7 +116,7 @@ export function Environment({
       </div>
 
       {project.modulos.length > 0 && (
-        <ul className="mt-5 space-y-2">
+        <ul ref={parentRef} className="mt-5 space-y-2">
         {project.modulos.map((m, i) => {
           const b = budgets.find((x) => x.module.id === m.id)
           return (

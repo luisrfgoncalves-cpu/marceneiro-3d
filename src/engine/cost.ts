@@ -15,6 +15,16 @@ export interface PriceCatalog {
   puxador: number // R$/unidade (padrão, quando não há preço por tipo)
   puxadores?: Record<string, number> // tipo (Seção 4.3) -> R$/unidade
   pistao: number // R$/unidade (Seção 4.4)
+  parafusos?: {
+    fundo?: number
+    taponamento?: number
+    dobradicaCaixa?: number
+    dobradicaPorta?: number
+    cantoneira?: number
+    montagem?: number
+    cavilha?: number
+    cantoneiraZamac?: number
+  }
 }
 
 export interface BudgetItem {
@@ -81,7 +91,7 @@ export function estimateCost(
   }
   items.push({ label: 'Fita de borda', qty: fitaM, unit: 'm', unitPrice: fitaM > 0 ? fitaTotal / fitaM : 0, total: fitaTotal })
 
-  // Ferragens
+  // Ferragens principais
   const nDobradicas = result.hinges.length
   const nCorredicas = config.gavetas.quantidade * 2
   const corredicaPrice = (config.corredica && catalog.corredicas?.[String(config.corredica.medida)]) ?? catalog.corredica
@@ -99,6 +109,64 @@ export function estimateCost(
   if (nPistoes > 0) {
     items.push({ label: 'Pistões a gás', qty: nPistoes, unit: 'un', unitPrice: catalog.pistao, total: nPistoes * catalog.pistao })
   }
+
+  // Parafusos e Fixações (Seção 4.9 & 4.10)
+  const pPrices = catalog.parafusos ?? {
+    fundo: 0.15,
+    taponamento: 0.20,
+    dobradicaCaixa: 0.15,
+    dobradicaPorta: 0.12,
+    cantoneira: 0.12,
+    montagem: 0.25,
+    cavilha: 0.10,
+    cantoneiraZamac: 0.80,
+  }
+
+  // 1. Fixar fundo (3.5 x 20mm): 4 parafusos por fundo
+  const nParafusosFundo = config.sistemaFundo !== 'sem_fundo' ? 8 : 0
+  if (nParafusosFundo > 0) {
+    items.push({ label: 'Parafuso 3,5×20mm (Fundo)', qty: nParafusosFundo, unit: 'un', unitPrice: pPrices.fundo ?? 0.15, total: nParafusosFundo * (pPrices.fundo ?? 0.15) })
+  }
+
+  // 2. Tamponamento unindo lateral (3.5 x 30mm): 4 por lateral de taponamento
+  let nParafusosTapon = 0
+  if (config.taponamento.esquerda.ativo) nParafusosTapon += 4
+  if (config.taponamento.direita.ativo) nParafusosTapon += 4
+  if (nParafusosTapon > 0) {
+    items.push({ label: 'Parafuso 3,5×30mm (Taponamento)', qty: nParafusosTapon, unit: 'un', unitPrice: pPrices.taponamento ?? 0.20, total: nParafusosTapon * (pPrices.taponamento ?? 0.20) })
+  }
+
+  // 3. Instalar dobradiça no armário (4 x 20mm): 2 por dobradiça
+  const nParafusosDobCaixa = nDobradicas * 2
+  if (nParafusosDobCaixa > 0) {
+    items.push({ label: 'Parafuso 4×20mm (Dobradiça Caixa)', qty: nParafusosDobCaixa, unit: 'un', unitPrice: pPrices.dobradicaCaixa ?? 0.15, total: nParafusosDobCaixa * (pPrices.dobradicaCaixa ?? 0.15) })
+  }
+
+  // 4. Instalar dobradiça na porta (3.5 x 16mm): 2 por dobradiça
+  const nParafusosDobPorta = nDobradicas * 2
+  if (nParafusosDobPorta > 0) {
+    items.push({ label: 'Parafuso 3,5×16mm (Dobradiça Porta)', qty: nParafusosDobPorta, unit: 'un', unitPrice: pPrices.dobradicaPorta ?? 0.12, total: nParafusosDobPorta * (pPrices.dobradicaPorta ?? 0.12) })
+  }
+
+  // 5. Fixar cantoneiras (3.5 x 16mm): 2 parafusos por cantoneira
+  const nCantoneiras = config.prateleiras.quantidade * 4
+  const nParafusosCant = nCantoneiras * 2
+  if (nCantoneiras > 0) {
+    items.push({ label: 'Cantoneira Zamac 1 furo', qty: nCantoneiras, unit: 'un', unitPrice: pPrices.cantoneiraZamac ?? 0.80, total: nCantoneiras * (pPrices.cantoneiraZamac ?? 0.80) })
+    items.push({ label: 'Parafuso 3,5×16mm (Cantoneira)', qty: nParafusosCant, unit: 'un', unitPrice: pPrices.cantoneira ?? 0.12, total: nParafusosCant * (pPrices.cantoneira ?? 0.12) })
+  }
+
+  // 6. Montagem geral entre painéis (3.5 x 40mm ou 4 x 40mm)
+  let nParafusosMontagem = 8 // Caixa estrutural
+  if (config.montantes.ativo) nParafusosMontagem += 4
+  nParafusosMontagem += config.gavetas.quantidade * 8 // 8 por gaveta
+  items.push({ label: 'Parafuso 4×40mm (Montagem)', qty: nParafusosMontagem, unit: 'un', unitPrice: pPrices.montagem ?? 0.25, total: nParafusosMontagem * (pPrices.montagem ?? 0.25) })
+
+  // 7. Reforço Cavilhas 8mm
+  let nCavilhas = 8
+  if (config.montantes.ativo) nCavilhas += 4
+  nCavilhas += config.gavetas.quantidade * 8
+  items.push({ label: 'Cavilha 8mm', qty: nCavilhas, unit: 'un', unitPrice: pPrices.cavilha ?? 0.10, total: nCavilhas * (pPrices.cavilha ?? 0.10) })
 
   const total = items.reduce((s, i) => s + i.total, 0)
   return { items: items.filter((i) => i.total > 0), total }
@@ -141,5 +209,15 @@ export function defaultCatalog(): PriceCatalog {
       tip_on: 0,
     },
     pistao: 40,
+    parafusos: {
+      fundo: 0.15,
+      taponamento: 0.20,
+      dobradicaCaixa: 0.15,
+      dobradicaPorta: 0.12,
+      cantoneira: 0.12,
+      montagem: 0.25,
+      cavilha: 0.10,
+      cantoneiraZamac: 0.80,
+    }
   }
 }

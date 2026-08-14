@@ -12,15 +12,39 @@ export interface TampoArgs {
   pingadeiraFrente: number // mm além da frente (0 = rente)
   pingadeiraLados: number // mm além de cada lateral (0 = rente)
   materialId: string
+  material?: 'mdf' | 'pedra'
+  cuba?: { largura: number; profundidade: number; posX: number; posZ: number }
+  cooktop?: { largura: number; profundidade: number; posX: number; posZ: number }
 }
 
 export function computeTampo(a: TampoArgs): Piece[] {
   const w = a.moduleWidth + 2 * a.pingadeiraLados
   const d = a.moduleDepth + a.pingadeiraFrente
   const y = a.moduleHeight - a.espessura
+
+  const cutouts: Piece['cutouts'] = []
+  if (a.cuba) {
+    cutouts.push({
+      type: 'cuba',
+      w: a.cuba.largura,
+      d: a.cuba.profundidade,
+      position: { x: a.cuba.posX, y, z: a.cuba.posZ },
+    })
+  }
+  if (a.cooktop) {
+    cutouts.push({
+      type: 'cooktop',
+      w: a.cooktop.largura,
+      d: a.cooktop.profundidade,
+      position: { x: a.cooktop.posX, y, z: a.cooktop.posZ },
+    })
+  }
+
+  const name = a.material === 'pedra' ? 'Pia de pedra' : 'Tampo'
+
   return [
     box({
-      name: 'Tampo',
+      name,
       w,
       h: a.espessura,
       d,
@@ -28,6 +52,7 @@ export function computeTampo(a: TampoArgs): Piece[] {
       materialId: a.materialId,
       edgeBanding: { top: true, left: true, right: true, bottom: false },
       grainDirection: 'horizontal',
-    }),
+      ...(cutouts.length > 0 ? { cutouts } : {}),
+    } as any),
   ]
 }

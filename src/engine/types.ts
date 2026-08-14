@@ -32,6 +32,12 @@ export interface Piece {
     left: boolean
     right: boolean
   }
+  cutouts?: Array<{
+    type: 'cuba' | 'cooktop'
+    w: number
+    d: number
+    position: Vec3
+  }>
 }
 
 export interface Hinge {
@@ -85,7 +91,7 @@ export type TipoPorta = 'solteira' | 'casal' | 'basculante'
 
 export type PortaAbrePara = 'cima' | 'baixo'
 
-export type ModuloTipo = 'balcao' | 'gaveteiro' | 'aereo' | 'torre' | 'armario' | 'guarda_roupa'
+export type ModuloTipo = 'balcao' | 'gaveteiro' | 'aereo' | 'torre' | 'armario' | 'guarda_roupa' | 'home'
 
 export type PuxadorTipo =
   | 'perfil_gola_anodizado'
@@ -159,6 +165,19 @@ export interface ModuloConfig {
     espessura: number
     pingadeiraFrente: number // 0 = rente
     pingadeiraLados: number // 0 = rente
+    material?: 'mdf' | 'pedra'
+    cuba?: {
+      largura: number
+      profundidade: number
+      posX: number
+      posZ: number
+    }
+    cooktop?: {
+      largura: number
+      profundidade: number
+      posX: number
+      posZ: number
+    }
   }
   // Montante deitado (balcão/gabinete) opcional
   montantes: {

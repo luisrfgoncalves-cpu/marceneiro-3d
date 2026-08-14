@@ -80,6 +80,9 @@ export function computeBalcao(config: ModuloConfig, rules: EngineRules) {
       pingadeiraFrente: config.tampo.pingadeiraFrente,
       pingadeiraLados: config.tampo.pingadeiraLados,
       materialId: config.materialExterno,
+      material: config.tampo.material,
+      cuba: config.tampo.cuba,
+      cooktop: config.tampo.cooktop,
     }),
   )
 
@@ -171,6 +174,8 @@ export function computeBalcao(config: ModuloConfig, rules: EngineRules) {
             largura: interior.w,
             profundidade: P - rules.gavetaRecuoTrilho,
             altura: gavetaAltura,
+            sistema: config.gavetas.sistema,
+            espessura: config.gavetas.espessura,
           },
           config.materialInterno,
           rules,

@@ -1,7 +1,6 @@
-// Controles de UI reutilizáveis, mobile-first.
-
 import { useState, type ReactNode } from 'react'
 import { ChevronDown, Minus, Plus } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface SectionProps {
   title: string
@@ -22,7 +21,19 @@ export function CollapsibleSection({ title, children, defaultOpen = false }: Sec
         <span>{title}</span>
         <ChevronDown size={16} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
-      {open && <div className="px-4 pb-4 pt-1 space-y-3 border-t border-steel-700/40">{children}</div>}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="overflow-hidden border-t border-steel-700/40"
+          >
+            <div className="px-4 pb-4 pt-2 space-y-3">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
