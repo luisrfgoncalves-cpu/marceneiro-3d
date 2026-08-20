@@ -1,5 +1,5 @@
 ﻿// Shell do app — navegação por estado (padrão do projeto irmão corte-sobmedida).
-// Fluxo completo (Seção 11.4): Onboarding → Início → Novo projeto (11.4 passos 1-2) →
+// Fluxo completo (Seção 11.4): Auth → Onboarding → Início → Novo projeto →
 // Ambiente (11.7) → Biblioteca de módulos (11.2) → Ajuste com 3D ao vivo (11.3/11.5).
 
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
@@ -11,6 +11,7 @@ import { PriceStore, type PriceCatalog } from './lib/prices'
 import { defaultCatalog } from './engine/cost'
 import { Persistence } from './lib/persistence'
 import type { DbCliente } from './lib/db'
+import { Auth } from './pages/Auth'
 import { Onboarding } from './pages/Onboarding'
 import { Home } from './pages/Home'
 import { NewProject, type NewProjectData } from './pages/NewProject'
@@ -23,8 +24,12 @@ const ModuleAdjuster = lazy(() =>
 )
 const Environment = lazy(() => import('./pages/Environment').then((m) => ({ default: m.Environment })))
 
-type Screen = 'onboarding' | 'home' | 'new_project' | 'environment' | 'grid' | 'adjuster'
+type Screen = 'auth' | 'onboarding' | 'home' | 'new_project' | 'environment' | 'grid' | 'adjuster'
 type GridMode = 'add' | 'edit'
+
+// Verifica se o usuário já escolheu "modo demo" neste dispositivo
+const DEMO_KEY = 'marceneiro3d_demo_mode'
+const isDemoMode = typeof localStorage !== 'undefined' && localStorage.getItem(DEMO_KEY) === 'true'
 
 export default function App() {
   const store = useMemo(() => new RuleStore(), [])
@@ -34,9 +39,39 @@ export default function App() {
   const [rules, setRules] = useState<EngineRules>(DEFAULT_RULES)
   const [catalog, setCatalog] = useState<PriceCatalog | null>(null)
 
-  // Onboarding: se o marceneiro já viu, vai direto para home
+  // Determinar tela inicial:
+  // 1. Modo demo (localStorage): ir direto ao onboarding/home
+  // 2. Supabase disponível: checar sessão ativa → se não tiver → Auth
+  // 3. Sem Supabase: vai para onboarding/home automaticamente (modo demo implícito)
   const alreadyOnboarded = typeof localStorage !== 'undefined' && localStorage.getItem('marceneiro3d_onboarding_done') === 'true'
-  const [screen, setScreen] = useState<Screen>(alreadyOnboarded ? 'home' : 'onboarding')
+
+  const getInitialScreen = (): Screen => {
+    if (!persistence.hasBackend || isDemoMode) {
+      // Sem backend ou modo demo: skip auth
+      return alreadyOnboarded ? 'home' : 'onboarding'
+    }
+    // Com backend: sempre mostrar auth primeiro (session será checada depois)
+    return 'auth'
+  }
+
+  const [screen, setScreen] = useState<Screen>(getInitialScreen)
+  const [authChecked, setAuthChecked] = useState(false)
+
+  // Se Supabase está disponível, verificar se já há sessão ativa
+  useEffect(() => {
+    if (!persistence.hasBackend || isDemoMode) {
+      setAuthChecked(true)
+      return
+    }
+    persistence.getCurrentUser().then((user) => {
+      if (user) {
+        // Sessão ativa — ir para home diretamente
+        setScreen(alreadyOnboarded ? 'home' : 'onboarding')
+      }
+      // Se não há sessão, manter em 'auth'
+      setAuthChecked(true)
+    })
+  }, [persistence, alreadyOnboarded])
 
   const [projects, setProjects] = useState<EnvironmentProject[]>([])
   const [clients, setClients] = useState<DbCliente[]>([])
@@ -50,12 +85,14 @@ export default function App() {
   }, [store])
 
   useEffect(() => {
+    // Só carregar projetos depois que auth for verificado
+    if (!authChecked) return
     Promise.all([persistence.loadProjects(), persistence.loadClients(), prices.load()]).then(([ps, cs, cat]) => {
       setProjects(ps)
       setClients(cs)
       setCatalog(cat)
     })
-  }, [persistence, prices])
+  }, [persistence, prices, authChecked])
 
   const openEnvironment = useCallback(
     (project: EnvironmentProject) => {
@@ -116,6 +153,37 @@ export default function App() {
     await persistence.deleteProject(id)
     setProjects((prev) => prev.filter((p) => p.id !== id))
     if (current?.id === id) setCurrent(null)
+  }
+
+  // --- Telas ---
+
+  // Auth loading state (Supabase presente, mas ainda verificando sessão)
+  if (persistence.hasBackend && !isDemoMode && !authChecked) {
+    return (
+      <div className="min-h-dvh grid place-items-center" style={{ background: '#0f172a' }}>
+        <div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (screen === 'auth') {
+    return (
+      <Auth
+        persistence={persistence}
+        onAuth={() => {
+          // Recarregar projetos após login bem-sucedido
+          Promise.all([persistence.loadProjects(), persistence.loadClients()]).then(([ps, cs]) => {
+            setProjects(ps)
+            setClients(cs)
+          })
+          setScreen(alreadyOnboarded ? 'home' : 'onboarding')
+        }}
+        onDemo={() => {
+          localStorage.setItem(DEMO_KEY, 'true')
+          setScreen(alreadyOnboarded ? 'home' : 'onboarding')
+        }}
+      />
+    )
   }
 
   if (screen === 'onboarding') {
@@ -220,4 +288,3 @@ export default function App() {
     />
   )
 }
-

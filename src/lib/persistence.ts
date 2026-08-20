@@ -1,5 +1,6 @@
-// Persistência à prova de falhas: grava no Supabase quando disponível e faz
+﻿// Persistência à prova de falhas: grava no Supabase quando disponível e faz
 // espelho em localStorage (offline-first). Nenhuma ação do marceneiro se perde.
+// Atualizado para suportar Supabase Auth e preencher userId nas tabelas.
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { computeModule } from '../engine/computeModule'
@@ -25,6 +26,43 @@ export class Persistence {
 
   get hasBackend(): boolean {
     return this.supabase !== null
+  }
+
+  // ---- AuthDelegates ----
+  async signUp(email: string, pass: string) {
+    if (!this.supabase) throw new Error('Supabase indisponível')
+    return this.supabase.auth.signUp({ email, password: pass })
+  }
+
+  async signIn(email: string, pass: string) {
+    if (!this.supabase) throw new Error('Supabase indisponível')
+    return this.supabase.auth.signInWithPassword({ email, password: pass })
+  }
+
+  async signOut() {
+    if (this.supabase) {
+      await this.supabase.auth.signOut()
+    }
+  }
+
+  async getCurrentUser() {
+    if (!this.supabase) return null
+    try {
+      const { data: { user } } = await this.supabase.auth.getUser()
+      return user
+    } catch {
+      return null
+    }
+  }
+
+  private async getUserId(): Promise<string | null> {
+    if (!this.supabase) return null
+    try {
+      const { data: { user } } = await this.supabase.auth.getUser()
+      return user?.id ?? null
+    } catch {
+      return null
+    }
   }
 
   // ---- espelho local (nunca lança erro) ----
@@ -53,8 +91,15 @@ export class Persistence {
   async loadClients(): Promise<DbCliente[]> {
     if (this.supabase) {
       try {
-        const { data, error } = await this.supabase.from('clientes').select('id,nome,contato').order('created_at')
-        if (!error && data) return data as DbCliente[]
+        const userId = await this.getUserId()
+        if (userId) {
+          const { data, error } = await this.supabase
+            .from('clientes')
+            .select('id,nome,contato')
+            .eq('userId', userId)
+            .order('created_at')
+          if (!error && data) return data as DbCliente[]
+        }
       } catch {
         // segue para fallback local
       }
@@ -70,7 +115,10 @@ export class Persistence {
     const cliente: DbCliente = { id: uid(), nome, contato: contato || null }
     if (this.supabase) {
       try {
-        await this.supabase.from('clientes').upsert({ ...cliente, userId: null }, { onConflict: 'id' })
+        const userId = await this.getUserId()
+        if (userId) {
+          await this.supabase.from('clientes').upsert({ ...cliente, userId }, { onConflict: 'id' })
+        }
       } catch {
         // offline — cliente será recriado quando o projeto for salvo
       }
@@ -82,22 +130,26 @@ export class Persistence {
   async loadProjects(): Promise<EnvironmentProject[]> {
     if (this.supabase) {
       try {
-        const { data: rows, error } = await this.supabase
-          .from('projects')
-          .select('id,nome,ambiente,cliente,status,updated_at')
-          .order('updated_at', { ascending: false })
-        if (!error && rows) {
-          const ids = rows.map((r) => r.id)
-          const { data: modRows } = ids.length
-            ? await this.supabase.from('project_modules').select('id,project_id,config,posicao,ordem').in('project_id', ids)
-            : { data: [] }
-          const byProject = new Map<string, Array<{ id: string; config: Record<string, unknown>; ordem: number }>>()
-          for (const m of modRows ?? []) {
-            const arr = byProject.get(m.project_id) ?? []
-            arr.push(m as { id: string; config: Record<string, unknown>; ordem: number })
-            byProject.set(m.project_id, arr)
+        const userId = await this.getUserId()
+        if (userId) {
+          const { data: rows, error } = await this.supabase
+            .from('projects')
+            .select('id,nome,ambiente,cliente,status,updated_at')
+            .eq('userId', userId)
+            .order('updated_at', { ascending: false })
+          if (!error && rows) {
+            const ids = rows.map((r) => r.id)
+            const { data: modRows } = ids.length
+              ? await this.supabase.from('project_modules').select('id,project_id,config,posicao,ordem').in('project_id', ids)
+              : { data: [] }
+            const byProject = new Map<string, Array<{ id: string; config: Record<string, unknown>; ordem: number }>>()
+            for (const m of modRows ?? []) {
+              const arr = byProject.get(m.project_id) ?? []
+              arr.push(m as { id: string; config: Record<string, unknown>; ordem: number })
+              byProject.set(m.project_id, arr)
+            }
+            return rows.map((r) => this.fromRow(r as never, byProject.get(r.id) ?? []))
           }
-          return rows.map((r) => this.fromRow(r as never, byProject.get(r.id) ?? []))
         }
       } catch {
         // segue para fallback local
@@ -136,8 +188,9 @@ export class Persistence {
 
   async saveProject(project: EnvironmentProject, rules: EngineRules): Promise<SaveResult> {
     let offline = !this.supabase
+    const userId = await this.getUserId()
 
-    if (this.supabase) {
+    if (this.supabase && userId) {
       try {
         const { placed } = layoutEnvironment(project, rules)
         await this.supabase.from('projects').upsert(
@@ -148,7 +201,7 @@ export class Persistence {
             cliente: project.cliente,
             status: project.status,
             updated_at: new Date().toISOString(),
-            userId: null,
+            userId: userId,
           },
           { onConflict: 'id' },
         )
@@ -180,6 +233,8 @@ export class Persistence {
       } catch {
         offline = true
       }
+    } else {
+      offline = true
     }
 
     // Espelho local sempre (funciona 100% offline)
@@ -192,8 +247,11 @@ export class Persistence {
   async deleteProject(id: string): Promise<void> {
     if (this.supabase) {
       try {
-        await this.supabase.from('project_modules').delete().eq('project_id', id)
-        await this.supabase.from('projects').delete().eq('id', id)
+        const userId = await this.getUserId()
+        if (userId) {
+          await this.supabase.from('project_modules').delete().eq('project_id', id)
+          await this.supabase.from('projects').delete().eq('id', id)
+        }
       } catch {
         // segue com o espelho local
       }
