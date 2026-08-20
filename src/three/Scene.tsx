@@ -3,7 +3,7 @@
 // Atualizado com luzes mais vívidas, melhor posicionamento para mobile, e botão de reset visualização.
 
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Grid, ContactShadows } from '@react-three/drei'
+import { OrbitControls, Grid, ContactShadows, Environment } from '@react-three/drei'
 import type { ModuleResult } from '../engine/types'
 import { Pieces } from './Pieces'
 import { Pistons } from './Pistons'
@@ -59,6 +59,7 @@ export function Scene({ result }: SceneProps) {
           infiniteGrid={false}
         />
         <ContactShadows position={[w / 2, 0.002, d / 2]} opacity={0.4} scale={Math.max(w, d) + 2} blur={2.0} far={3} />
+        <Environment preset="apartment" />
         <OrbitControls
           ref={controlsRef}
           makeDefault

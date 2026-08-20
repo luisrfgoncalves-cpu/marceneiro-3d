@@ -46,11 +46,11 @@ export default function App() {
   const alreadyOnboarded = typeof localStorage !== 'undefined' && localStorage.getItem('marceneiro3d_onboarding_done') === 'true'
 
   const getInitialScreen = (): Screen => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.has('view')) return 'environment'
     if (!persistence.hasBackend || isDemoMode) {
-      // Sem backend ou modo demo: skip auth
       return alreadyOnboarded ? 'home' : 'onboarding'
     }
-    // Com backend: sempre mostrar auth primeiro (session será checada depois)
     return 'auth'
   }
 
@@ -59,16 +59,28 @@ export default function App() {
 
   // Se Supabase está disponível, verificar se já há sessão ativa
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const viewProjId = params.get('view')
+    if (viewProjId) {
+      persistence.loadSharedProject(viewProjId).then((proj) => {
+        if (proj) {
+          setCurrent(proj)
+          setScreen('environment')
+        } else {
+          setScreen(persistence.hasBackend && !isDemoMode ? 'auth' : 'home')
+        }
+        setAuthChecked(true)
+      })
+      return
+    }
     if (!persistence.hasBackend || isDemoMode) {
       setAuthChecked(true)
       return
     }
     persistence.getCurrentUser().then((user) => {
       if (user) {
-        // Sessão ativa — ir para home diretamente
         setScreen(alreadyOnboarded ? 'home' : 'onboarding')
       }
-      // Se não há sessão, manter em 'auth'
       setAuthChecked(true)
     })
   }, [persistence, alreadyOnboarded])
@@ -240,6 +252,7 @@ export default function App() {
       >
         <Environment
         project={current}
+        readOnly={new URLSearchParams(window.location.search).has('view')}
         rules={rules}
         catalog={catalog ?? defaultCatalog()}
         onBack={() => setScreen('home')}

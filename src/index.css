@@ -59,3 +59,21 @@ html.light-theme .glass-panel {
   background: rgba(255, 255, 255, 0.75);
   border-color: rgba(18, 20, 29, 0.1);
 }
+
+@media print {
+  body {
+    background: white !important;
+    color: #1e293b !important;
+  }
+  header, footer, nav, button, canvas, .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    z-index: 9999;
+  }
+}

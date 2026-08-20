@@ -1,5 +1,5 @@
-// Tipos centrais do domínio — Motor Paramétrico de Marcenaria
-// Documento-fonte: spec v2.0 (Seções 8, 9)
+﻿// Tipos centrais do domÃ­nio â€” Motor ParamÃ©trico de Marcenaria
+// Documento-fonte: spec v2.0 (SeÃ§Ãµes 8, 9)
 
 export interface Vec3 {
   x: number
@@ -17,10 +17,10 @@ export interface Piece {
   w: number
   h: number
   d: number
-  // Posição do canto inferior-traseiro-esquerdo da peça, em mm.
-  // Origem do módulo: piso, traseira, esquerda.
+  // PosiÃ§Ã£o do canto inferior-traseiro-esquerdo da peça, em mm.
+  // Origem do mÃ³dulo: piso, traseira, esquerda.
   position: Vec3
-  // Rotação em graus (Euler) — para peças montadas em outra orientação
+  // RotaÃ§Ã£o em graus (Euler) â€” para peÃ§as montadas em outra orientaÃ§Ã£o
   rotation: Vec3
   materialId: string
   edgeBandId: string | null
@@ -42,13 +42,13 @@ export interface Piece {
 
 export interface Hinge {
   doorId: string
-  yMm: number // posição da dobradiça ao longo da altura da porta (mm do topo da porta)
+  yMm: number // posiÃ§Ã£o da dobradiÃ§a ao longo da altura da porta (mm do topo da porta)
   relocated: boolean // true se foi realocada automaticamente por conflito
 }
 
 export interface Piston {
   doorId: string
-  yMm: number // posição do pistão ao longo da altura da porta
+  yMm: number // posiÃ§Ã£o do pistÃ£o ao longo da altura da porta
 }
 
 export type WarningType =
@@ -114,7 +114,7 @@ export interface ModuloConfig {
   moduloTipo: ModuloTipo
   ambiente: Ambiente
   nome?: string
-  // Dimensões gerais em mm
+  // DimensÃµes gerais em mm
   largura: number
   altura: number
   profundidade: number
@@ -122,7 +122,7 @@ export interface ModuloConfig {
   materialInterno: string
   materialExterno: string
   fitaBorda: string
-  // Fita de borda por peça (Seção 3.2) — fallback para fitaBorda quando ausente
+  // Fita de borda por peÃ§a (Seção 3.2) â€” fallback para fitaBorda quando ausente
   fitas?: {
     porta?: string
     prateleira?: string
@@ -136,7 +136,7 @@ export interface ModuloConfig {
     tipo: TipoPorta
     dobradicasPorPorta: number
     espessura: number
-    // Porta basculante (Seção 5.8)
+    // Porta basculante (SeÃ§Ã£o 5.8)
     abrePara?: PortaAbrePara
     pistao?: boolean
   }
@@ -147,10 +147,10 @@ export interface ModuloConfig {
     espessura: number // 15 ou 18mm (invisível exige 15)
   }
 
-  // Puxadores (Seção 4.3) — tipo tip_on = sem puxador físico
+  // Puxadores (SeÃ§Ã£o 4.3) â€” tipo tip_on = sem puxador fÃ­sico
   puxador?: { tipo: PuxadorTipo; cor: PuxadorCor }
 
-  // Corrediça (Seção 4.2) — medida em cm (30..60)
+  // CorrediÃ§a (SeÃ§Ã£o 4.2) â€” medida em cm (30..60)
   corredica?: { medida: number }
 
   sistemaFundo: SistemaFundo
@@ -158,7 +158,7 @@ export interface ModuloConfig {
   rodape: {
     ativo: boolean
     altura: number
-    recuo: number // mm de recuo em relação à frente
+    recuo: number // mm de recuo em relação Ã  frente
     material: 'mdf' | 'pedra'
   }
   tampo: {
@@ -188,5 +188,8 @@ export interface ModuloConfig {
   }
   orelhinha: { ativo: boolean; largura: number }
   prateleiras: { quantidade: number; espessura: number }
+  // Sentido do veio global -- quando definido, sobrescreve o padrao do motor nas pecas estruturais
+  veioGlobal?: GrainDirection
   sapateiras: { quantidade: number }
 }
+

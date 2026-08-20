@@ -31,7 +31,8 @@ interface EnvironmentProps {
   onRemoveModule: (id: string) => void
   onToggleStatus: () => void
   onSave: () => Promise<boolean>
-  onDuplicateModule?: (module: ModuleInstance) => void
+  onDuplicateModule?: (module: ModuleInstance) => void;
+  readOnly?: boolean;
 }
 
 export function Environment({
@@ -45,6 +46,7 @@ export function Environment({
   onToggleStatus,
   onSave,
   onDuplicateModule,
+  readOnly = false,
 }: EnvironmentProps) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -103,10 +105,16 @@ export function Environment({
     <div className="max-w-3xl mx-auto px-4 pt-4 pb-28">
       {/* Header */}
       <div className="flex items-center gap-2 mb-1">
-        <button type="button" onClick={onBack} className="flex items-center gap-1 text-sm text-steel-400 active:text-steel-200 transition-colors">
-          <ArrowLeft size={16} />
-          Projetos
-        </button>
+        {readOnly ? (
+          <a href={window.location.origin} className="flex items-center gap-1.5 text-xs bg-wood-500 hover:bg-wood-600 text-white font-bold px-3.5 py-2 rounded-xl transition-all active:scale-95 no-print">
+            Criar meu projeto no Marceneiro 3D
+          </a>
+        ) : (
+          <button type="button" onClick={onBack} className="flex items-center gap-1 text-sm text-steel-400 active:text-steel-200 transition-colors">
+            <ArrowLeft size={16} />
+            Projetos
+          </button>
+        )}
         <button
           type="button"
           onClick={onToggleStatus}
@@ -134,24 +142,28 @@ export function Environment({
       </div>
 
       {/* Ações */}
-      <div className="mt-4 flex items-center gap-2 flex-wrap">
-        <button
-          type="button"
-          onClick={onAddModule}
-          className="flex items-center gap-2 rounded-xl bg-wood-500 text-white text-sm font-semibold px-4 py-2.5 active:bg-wood-600 transition-colors shadow-lg shadow-wood-500/10"
-        >
-          <Plus size={16} />
-          Adicionar módulo
-        </button>
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          className="flex items-center gap-2 rounded-xl bg-steel-700 text-steel-100 text-sm font-semibold px-4 py-2.5 active:bg-steel-600 transition-colors disabled:opacity-50"
-        >
-          {saving ? <RefreshCw size={15} className="animate-spin" /> : saved ? <Check size={15} className="text-emerald-400" /> : <Save size={15} />}
-          {saved ? 'Salvo!' : 'Salvar'}
-        </button>
+      <div className="mt-4 flex items-center gap-2 flex-wrap no-print">
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={onAddModule}
+            className="flex items-center gap-2 rounded-xl bg-wood-500 text-white text-sm font-semibold px-4 py-2.5 active:bg-wood-600 transition-colors shadow-lg shadow-wood-500/10"
+          >
+            <Plus size={16} />
+            Adicionar módulo
+          </button>
+        )}
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 rounded-xl bg-steel-700 text-steel-100 text-sm font-semibold px-4 py-2.5 active:bg-steel-600 transition-colors disabled:opacity-50"
+          >
+            {saving ? <RefreshCw size={15} className="animate-spin" /> : saved ? <Check size={15} className="text-emerald-400" /> : <Save size={15} />}
+            {saved ? 'Salvo!' : 'Salvar'}
+          </button>
+        )}
         <button
           type="button"
           onClick={handleShare}
@@ -160,6 +172,14 @@ export function Environment({
         >
           <Share2 size={15} />
           Compartilhar
+        </button>
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="flex items-center gap-2 rounded-xl bg-steel-700 text-steel-100 text-sm font-semibold px-4 py-2.5 active:bg-steel-600 transition-colors"
+          title="Imprimir proposta ou salvar como PDF"
+        >
+          Imprimir / PDF
         </button>
       </div>
 
@@ -186,32 +206,34 @@ export function Environment({
                     {m.config.portas.quantidade > 0 && ` · ${m.config.portas.quantidade} porta${m.config.portas.quantidade > 1 ? 's' : ''}`}
                     {m.config.gavetas.quantidade > 0 && ` · ${m.config.gavetas.quantidade} gaveta${m.config.gavetas.quantidade > 1 ? 's' : ''}`}
                   </div>
-                  <div className="mt-2.5 flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => onEditModule(m.id)}
-                      className="flex items-center gap-1.5 rounded-lg bg-steel-700/60 hover:bg-steel-600/60 px-3 py-1.5 text-xs font-medium text-steel-200 active:scale-95 transition-all"
-                    >
-                      <Pencil size={12} />
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDuplicate(m)}
-                      className="flex items-center gap-1.5 rounded-lg bg-steel-700/60 hover:bg-steel-600/60 px-3 py-1.5 text-xs font-medium text-steel-300 active:scale-95 transition-all"
-                    >
-                      <Copy size={12} />
-                      Duplicar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onRemoveModule(m.id)}
-                      className="ml-auto flex items-center gap-1.5 rounded-lg bg-steel-700/60 hover:bg-red-500/20 hover:text-red-300 px-3 py-1.5 text-xs font-medium text-steel-400 active:scale-95 transition-all"
-                    >
-                      <Trash2 size={12} />
-                      Remover
-                    </button>
-                  </div>
+                  {!readOnly && (
+                    <div className="mt-2.5 flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => onEditModule(m.id)}
+                        className="flex items-center gap-1.5 rounded-lg bg-steel-700/60 hover:bg-steel-600/60 px-3 py-1.5 text-xs font-medium text-steel-200 active:scale-95 transition-all"
+                      >
+                        <Pencil size={12} />
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDuplicate(m)}
+                        className="flex items-center gap-1.5 rounded-lg bg-steel-700/60 hover:bg-steel-600/60 px-3 py-1.5 text-xs font-medium text-steel-300 active:scale-95 transition-all"
+                      >
+                        <Copy size={12} />
+                        Duplicar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onRemoveModule(m.id)}
+                        className="ml-auto flex items-center gap-1.5 rounded-lg bg-steel-700/60 hover:bg-red-500/20 hover:text-red-300 px-3 py-1.5 text-xs font-medium text-steel-400 active:scale-95 transition-all"
+                      >
+                        <Trash2 size={12} />
+                        Remover
+                      </button>
+                    </div>
+                  )}
                 </li>
               )
             })}
@@ -232,7 +254,7 @@ export function Environment({
       )}
 
       {/* Bottom bar fixa */}
-      <div className="fixed bottom-0 inset-x-0 border-t border-steel-700/60 bg-steel-900/96 backdrop-blur-xl px-4 py-3">
+      <div className="fixed bottom-0 no-print inset-x-0 border-t border-steel-700/60 bg-steel-900/96 backdrop-blur-xl px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
           <div>
             <div className="text-[10px] text-steel-500 uppercase tracking-wider font-semibold">Total estimado</div>
@@ -246,6 +268,76 @@ export function Environment({
           </div>
         </div>
       </div>
-    </div>
+    
+      {/* Printable Invoice / Proposal Layout (PDF) */}
+      <div className="hidden print-only bg-white text-slate-900 p-8 font-sans max-w-4xl mx-auto">
+        <div className="border-b-2 border-slate-200 pb-4 mb-6">
+          <h1 className="text-3xl font-bold text-slate-800">Proposta de Marcenaria</h1>
+          <p className="text-sm text-slate-500 mt-1">Gerado pelo Marceneiro 3D</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <div>
+            <div className="text-xs font-bold text-slate-400 uppercase">Projeto</div>
+            <div className="text-lg font-semibold text-slate-800">{project.nome}</div>
+          </div>
+          <div>
+            <div className="text-xs font-bold text-slate-400 uppercase">Cliente</div>
+            <div className="text-lg font-semibold text-slate-800">{project.cliente}</div>
+          </div>
+          <div>
+            <div className="text-xs font-bold text-slate-400 uppercase">Ambiente</div>
+            <div className="text-base text-slate-700">{AMBIENTE_LABEL[project.ambiente] ?? project.ambiente}</div>
+          </div>
+          <div>
+            <div className="text-xs font-bold text-slate-400 uppercase">Data</div>
+            <div className="text-base text-slate-700">{new Date().toLocaleDateString('pt-BR')}</div>
+          </div>
+        </div>
+
+        <h2 className="text-lg font-bold text-slate-800 border-b border-slate-200 pb-1.5 mb-3">Módulos</h2>
+        <table className="w-full text-left border-collapse mb-8 text-sm">
+          <thead>
+            <tr className="border-b border-slate-300 text-slate-500 font-semibold">
+              <th className="py-2">Item</th>
+              <th className="py-2">Módulo</th>
+              <th className="py-2">Dimensões (L × A × P)</th>
+              <th className="py-2 text-right">Preço Estimado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {project.modulos.map((m, idx) => {
+              const b = budgets.find((x) => x.module.id === m.id)
+              return (
+                <tr key={m.id} className="border-b border-slate-100 text-slate-700">
+                  <td className="py-3 font-semibold">{idx + 1}</td>
+                  <td className="py-3">
+                    <div className="font-semibold">{m.nome}</div>
+                    <div className="text-xs text-slate-400">
+                      MDF Interno: {m.config.materialInterno} · MDF Externo: {m.config.materialExterno}
+                    </div>
+                  </td>
+                  <td className="py-3 font-mono">{m.config.largura} × {m.config.altura} × {m.config.profundidade} mm</td>
+                  <td className="py-3 text-right font-mono font-semibold">
+                    {(b?.total ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+
+        <div className="flex flex-col items-end gap-1.5 border-t border-slate-200 pt-4 mb-12">
+          <div className="text-xs text-slate-500 uppercase font-semibold">Valor Total da Proposta</div>
+          <div className="text-3xl font-bold text-slate-800 font-mono">
+            {totalBudget.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </div>
+        </div>
+
+        <div className="text-center text-xs text-slate-400 border-t border-slate-100 pt-6">
+          Esta é uma estimativa de custos gerada pelo aplicativo Marceneiro 3D.
+        </div>
+      </div>
+</div>
   )
 }

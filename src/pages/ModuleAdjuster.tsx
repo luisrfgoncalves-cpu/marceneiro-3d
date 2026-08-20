@@ -83,6 +83,11 @@ const FITAS: Array<{ value: string; label: string }> = [
   { value: 'fita_proadec_64mm_maderado_x', label: '64mm Maderado' },
 ]
 
+const VEIOS: Array<{ value: 'vertical' | 'horizontal'; label: string }> = [
+  { value: 'vertical', label: '↕ Vertical' },
+  { value: 'horizontal', label: '↔ Horizontal' },
+]
+
 type TabID = 'medidas' | 'cores' | 'ferragens' | 'pecas'
 
 const SHEET_HEIGHTS = {
@@ -277,6 +282,12 @@ export function ModuleAdjuster({ config, onChange, rules, onBack, onConfirm, con
             <div className="space-y-4">
               <ColorPicker label="MDF Interno" value={config.materialInterno} onChange={(id) => patch({ materialInterno: id })} />
               <ColorPicker label="MDF Externo / Frentes" value={config.materialExterno} onChange={(id) => patch({ materialExterno: id })} />
+              <Segmented
+                label="Sentido do Veio"
+                value={config.veioGlobal ?? 'vertical'}
+                options={VEIOS}
+                onChange={(v) => patch({ veioGlobal: v as 'vertical' | 'horizontal' })}
+              />
               <div className="space-y-3">
                 <div className="text-xs font-bold text-steel-400 uppercase tracking-wider">Fitas de Borda</div>
                 <Segmented label="Portas" value={fitas.porta ?? config.fitaBorda} options={FITAS} onChange={(v) => patch({ fitas: { ...fitas, porta: v } })} />
@@ -429,4 +440,5 @@ function ColorPicker({ label, value, onChange }: ColorPickerProps) {
     </div>
   )
 }
+
 

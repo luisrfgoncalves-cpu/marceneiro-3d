@@ -1,4 +1,4 @@
-// Motor paramétrico — função pura (Seção 9).
+﻿// Motor paramétrico — função pura (Seção 9).
 // Recebe a config do módulo e as regras resolvidas; devolve a lista de peças
 // com dimensão/posição final + dobradiças + avisos. Não depende de 3D.
 
@@ -54,7 +54,17 @@ export function computeModule(config: ModuloConfig, rules: EngineRules): ModuleR
   }
 
   const piecesWithBand = applyEdgeBanding(pieces, config)
-  const warnings = [...extraWarnings, ...validate(piecesWithBand, rules)]
+
+  // Problema 2: aplicar sentido de veio global se configurado
+  // Respeita as regras de fundo/tampo (horizontal) — sobrescreve apenas pecas estruturais
+  const piecesWithGrain = config.veioGlobal
+    ? piecesWithBand.map((p) => {
+        // Fundos, tampos e gavetas mantêm seu veio calculado pelo motor
+        const isAutoGrain = /fundo|tampo|chapéu|chapeu|Caixa Gav|Fundo Gav/i.test(p.name)
+        return isAutoGrain ? p : { ...p, grainDirection: config.veioGlobal! }
+      })
+    : piecesWithBand
+  const warnings = [...extraWarnings, ...validate(piecesWithGrain, rules)]
 
   if (
     config.gavetas.quantidade > 0 &&
@@ -69,7 +79,7 @@ export function computeModule(config: ModuloConfig, rules: EngineRules): ModuleR
   }
 
   return {
-    pieces: piecesWithBand,
+    pieces: piecesWithGrain,
     hinges,
     pistons,
     warnings,

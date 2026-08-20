@@ -158,6 +158,28 @@ export class Persistence {
     return this.lsLoadProjects()
   }
 
+  async loadSharedProject(projectId: string): Promise<EnvironmentProject | null> {
+    if (!this.supabase) return null
+    try {
+      const { data: row, error } = await this.supabase
+        .from('projects')
+        .select('id,nome,ambiente,cliente,status,updated_at')
+        .eq('id', projectId)
+        .maybeSingle()
+      if (error || !row) return null
+
+      const { data: modRows } = await this.supabase
+        .from('project_modules')
+        .select('id,project_id,config,posicao,ordem')
+        .eq('project_id', projectId)
+
+      const modules = (modRows ?? []).map(m => m as { id: string; config: Record<string, unknown>; ordem: number })
+      return this.fromRow(row as never, modules)
+    } catch {
+      return null
+    }
+  }
+
   private fromRow(
     row: { id: string; nome: string; ambiente: string; cliente: string; status: string; updated_at: string },
     modules: Array<{ id: string; config: Record<string, unknown>; ordem: number }>,
