@@ -1,4 +1,4 @@
-﻿import { Plus, Trash2, ArrowUpRight, FolderOpen, CheckCircle, Clock } from 'lucide-react'
+﻿import { Plus, Trash2, ArrowUpRight, FolderOpen, CheckCircle, Clock, Settings2 } from 'lucide-react'
 import type { EnvironmentProject } from '../engine/environment'
 
 const AMBIENTE_LABEL: Record<string, string> = {
@@ -14,9 +14,10 @@ interface HomeProps {
   onNewProject: () => void
   onOpen: (project: EnvironmentProject) => void
   onDelete: (id: string) => void
+  onSettings?: () => void
 }
 
-export function Home({ projects, onNewProject, onOpen, onDelete }: HomeProps) {
+export function Home({ projects, onNewProject, onOpen, onDelete, onSettings }: HomeProps) {
   // Calculando estatísticas do marceneiro
   const totalProjects = projects.length
   const approvedProjects = projects.filter((p) => p.status === 'aprovado').length
@@ -26,7 +27,14 @@ export function Home({ projects, onNewProject, onOpen, onDelete }: HomeProps) {
     <div className="max-w-3xl mx-auto px-4 pt-6 pb-20">
       {/* Header com boas-vindas */}
       <header className="mb-6">
-        <div className="text-sm font-bold text-wood-400 uppercase tracking-wider">Marceneiro 3D</div>
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-bold text-wood-400 uppercase tracking-wider">Marceneiro 3D</div>
+          {onSettings && (
+            <button type="button" onClick={onSettings} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bg-panel border border-border-strong text-text-muted hover:text-text-base hover:bg-bg-panel-hover transition-colors text-xs font-bold">
+              <Settings2 size={13} /> Configurações
+            </button>
+          )}
+        </div>
         <h1 className="text-2xl font-bold text-steel-50 mt-1">Olá, Marceneiro! 👋</h1>
         <p className="text-sm text-steel-400 mt-1">Gerencie seus projetos e impressione seus clientes com propostas 3D em segundos.</p>
       </header>

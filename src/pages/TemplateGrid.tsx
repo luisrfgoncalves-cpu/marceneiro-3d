@@ -9,12 +9,14 @@ import { materialColor } from '../three/colors'
 
 interface TemplateGridProps {
   onSelect: (template: ModuleTemplate, config: ModuloConfig) => void
+  projectAmbiente?: string
   onBack: () => void
   backLabel?: string
 }
 
 export function TemplateGrid({ onSelect, onBack, backLabel = 'Início' }: TemplateGridProps) {
   // Load personal templates from localStorage (sorted by uso, most used first)
+  const [activeAmbiente, setActiveAmbiente] = useState<string>('todos')
   const [personalTemplates, setPersonalTemplates] = useState<Array<{
     id: string
     nome: string
@@ -98,8 +100,30 @@ export function TemplateGrid({ onSelect, onBack, backLabel = 'Início' }: Templa
         </>
       )}
 
+      
+      {/* Filtro de Ambientes */}
+      <div className="flex gap-2 overflow-x-auto pb-4 custom-scrollbar shrink-0 mb-2">
+        {[
+          { id: 'todos', label: 'Todos' },
+          { id: 'cozinha', label: '🍳 Cozinha' },
+          { id: 'dormitorio', label: '🛏️ Quarto' },
+          { id: 'banheiro', label: '🛁 Banheiro' },
+          { id: 'sala', label: '🛋️ Sala' },
+          { id: 'area_servico', label: '🪣 Serviço' },
+        ].map(a => (
+          <button
+            key={a.id}
+            type="button"
+            onClick={() => setActiveAmbiente(a.id)}
+            className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${activeAmbiente === a.id ? 'bg-wood-500 text-steel-50 shadow-sm' : 'bg-steel-800/40 border border-steel-750 text-steel-400 hover:text-steel-100'}`}
+          >
+            {a.label}
+          </button>
+        ))}
+      </div>
       <div className="grid grid-cols-2 gap-4">
-        {MODULE_TEMPLATES.map((t) => {
+
+        {MODULE_TEMPLATES.filter(t => activeAmbiente === 'todos' || t.ambiente === activeAmbiente).map((t) => {
           const cfg = t.cria()
           return (
             <button
