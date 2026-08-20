@@ -93,6 +93,10 @@ export type PortaAbrePara = 'cima' | 'baixo'
 
 export type ModuloTipo = 'balcao' | 'gaveteiro' | 'aereo' | 'torre' | 'armario' | 'guarda_roupa' | 'home' | 'pia'
 
+export type MontagemTipo = 'minifix' | 'vb36' | 'parafuso'
+export type DobradicaTipo = 'reta' | 'curva' | 'super_curva'
+export type CorredicaTipo = 'telescopica' | 'invisivel'
+
 export type PuxadorTipo =
   | 'perfil_gola_anodizado'
   | 'perfil_45_friso'
@@ -108,6 +112,19 @@ export interface TaponamentoLado {
   ativo: boolean
   avancao: number // mm de avanço frontal além do plano das portas
   espessura: number // 15 ou 18mm
+}
+
+export interface PecaOverride {
+  espessura?: number;
+  material?: string;
+  recuo?: number;
+  avanco?: number;
+  fitas?: {
+    top?: boolean;
+    bottom?: boolean;
+    left?: boolean;
+    right?: boolean;
+  };
 }
 
 export interface ModuloConfig {
@@ -148,6 +165,14 @@ export interface ModuloConfig {
   }
 
   // Puxadores (SeÃ§Ã£o 4.3) â€” tipo tip_on = sem puxador fÃ­sico
+  ferragens?: {
+    montagem: MontagemTipo;
+    dobradica: DobradicaTipo;
+    corredica: CorredicaTipo;
+  }
+  
+  pecasCustomizadas?: Record<string, PecaOverride>; // key is piece name (e.g. 'Lateral Esquerda')
+  
   puxador?: { tipo: PuxadorTipo; cor: PuxadorCor }
 
   // CorrediÃ§a (SeÃ§Ã£o 4.2) â€” medida em cm (30..60)

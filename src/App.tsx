@@ -228,12 +228,16 @@ export default function App() {
         }
       >
         <ModuleAdjuster
-          config={config}
-          onChange={setConfig}
+          initialConfig={config}
           rules={rules}
-          confirmLabel={gridMode === 'add' ? 'Adicionar ao projeto' : 'Salvar alterações'}
-          onConfirm={commitModule}
-          onBack={() => setScreen(gridMode === 'edit' ? 'environment' : 'grid')}
+          onSave={(c) => {
+            setConfig(c)
+            commitModule()
+          }}
+          onCancel={() => {
+            setScreen(gridMode === 'edit' ? 'environment' : 'grid')
+            setConfig(null)
+          }}
         />
       </Suspense>
     )
