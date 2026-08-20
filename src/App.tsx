@@ -7,8 +7,7 @@ import { RuleStore } from './engine/configStore'
 import { DEFAULT_RULES, type EngineRules } from './engine/rules'
 import { uid, type EnvironmentProject, type ModuleInstance } from './engine/environment'
 import type { ModuloConfig } from './engine/types'
-import { PriceStore, type PriceCatalog } from './lib/prices'
-import { defaultCatalog } from './engine/cost'
+import { PriceStore } from './lib/prices'
 import { Persistence } from './lib/persistence'
 import type { DbCliente } from './lib/db'
 import { Auth } from './pages/Auth'
@@ -37,7 +36,7 @@ export default function App() {
   const prices = useMemo(() => new PriceStore(), [])
 
   const [rules, setRules] = useState<EngineRules>(DEFAULT_RULES)
-  const [catalog, setCatalog] = useState<PriceCatalog | null>(null)
+  
 
   // Determinar tela inicial:
   // 1. Modo demo (localStorage): ir direto ao onboarding/home
@@ -99,10 +98,10 @@ export default function App() {
   useEffect(() => {
     // Só carregar projetos depois que auth for verificado
     if (!authChecked) return
-    Promise.all([persistence.loadProjects(), persistence.loadClients(), prices.load()]).then(([ps, cs, cat]) => {
+    Promise.all([persistence.loadProjects(), persistence.loadClients(), prices.load()]).then(([ps, cs]) => {
       setProjects(ps)
       setClients(cs)
-      setCatalog(cat)
+      
     })
   }, [persistence, prices, authChecked])
 
@@ -232,7 +231,6 @@ export default function App() {
           config={config}
           onChange={setConfig}
           rules={rules}
-          catalog={catalog ?? undefined}
           confirmLabel={gridMode === 'add' ? 'Adicionar ao projeto' : 'Salvar alterações'}
           onConfirm={commitModule}
           onBack={() => setScreen(gridMode === 'edit' ? 'environment' : 'grid')}
@@ -254,7 +252,6 @@ export default function App() {
         project={current}
         readOnly={new URLSearchParams(window.location.search).has('view')}
         rules={rules}
-        catalog={catalog ?? defaultCatalog()}
         onBack={() => setScreen('home')}
         onAddModule={() => {
           setGridMode('add')

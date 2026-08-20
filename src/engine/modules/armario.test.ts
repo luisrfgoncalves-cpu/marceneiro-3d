@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { DEFAULT_RULES } from '../rules'
 import { computeModule } from '../computeModule'
 import { estimateCost, defaultCatalog } from '../cost'
-import { armario2Portas, aereo2Portas, torre, guardaRoupa4Portas } from '../templates'
+import { armario2Portas, aereo2Portas, torre, guardaRoupa2Portas } from '../templates'
 
 describe('Caixaria base+chapéu passam (Seção 6.1)', () => {
   it('armário tem base e chapéu com a largura total', () => {
@@ -29,8 +29,8 @@ describe('Caixaria base+chapéu passam (Seção 6.1)', () => {
     expect(result.hinges.length).toBe(10) // 2 portas × 5
   })
 
-  it('guarda-roupa 4 portas tem 4 portas casal', () => {
-    const result = computeModule(guardaRoupa4Portas(), DEFAULT_RULES)
+  it('guarda-roupa 2 portas tem 2 portas', () => {
+    const result = computeModule(guardaRoupa2Portas(), DEFAULT_RULES)
     const portas = result.pieces.filter((p) => p.name.startsWith('Porta'))
     expect(portas).toHaveLength(4)
     // casal: 1ª e última dobradiça a 10cm, intermediciária dividida

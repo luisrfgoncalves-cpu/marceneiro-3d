@@ -1,17 +1,13 @@
-﻿// Ambiente do projeto (Seção 11.7): 3D do conjunto, módulos e orçamento total.
-// Melhorado: Web Share API, duplicar módulo, status badge, bottom bar rica.
-
 import { useMemo, useState } from 'react'
-import { ArrowLeft, Plus, Save, Pencil, Trash2, Check, RefreshCw, Share2, Copy } from 'lucide-react'
+import { ArrowLeft, Plus, Save, Pencil, Trash2, Check, RefreshCw, Share2, Copy, Sun, Moon } from 'lucide-react'
 import { layoutEnvironment, type EnvironmentProject } from '../engine/environment'
-import { estimateCost, type PriceCatalog } from '../engine/cost'
 import type { EngineRules } from '../engine/rules'
 import { EnvironmentScene } from '../three/EnvironmentScene'
 import { fmtLength, useUnitPref } from '../lib/units'
 import { uid } from '../engine/environment'
 import type { ModuleInstance } from '../engine/environment'
-
 import { useAutoAnimate } from '@formkit/auto-animate/react'
+import { useTheme } from '../components/ThemeProvider'
 
 const AMBIENTE_LABEL: Record<string, string> = {
   cozinha: 'Cozinha',
@@ -24,21 +20,19 @@ const AMBIENTE_LABEL: Record<string, string> = {
 interface EnvironmentProps {
   project: EnvironmentProject
   rules: EngineRules
-  catalog: PriceCatalog
   onBack: () => void
   onAddModule: () => void
   onEditModule: (id: string) => void
   onRemoveModule: (id: string) => void
   onToggleStatus: () => void
   onSave: () => Promise<boolean>
-  onDuplicateModule?: (module: ModuleInstance) => void;
-  readOnly?: boolean;
+  onDuplicateModule?: (module: ModuleInstance) => void
+  readOnly?: boolean
 }
 
 export function Environment({
   project,
   rules,
-  catalog,
   onBack,
   onAddModule,
   onEditModule,
@@ -52,18 +46,13 @@ export function Environment({
   const [saved, setSaved] = useState(false)
   const [unit] = useUnitPref()
   const [parentRef] = useAutoAnimate()
+  const { theme, setTheme } = useTheme()
 
-  const { pieces, placed, totalWidth } = useMemo(() => layoutEnvironment(project, rules), [project, rules])
+  const { pieces, totalWidth } = useMemo(() => layoutEnvironment(project, rules), [project, rules])
   const depth = useMemo(
     () => Math.max(...project.modulos.map((m) => m.config.profundidade), 600),
     [project.modulos],
   )
-
-  const budgets = useMemo(
-    () => placed.map((p) => ({ module: p.module, total: estimateCost(p.module.config, p.result, catalog).total })),
-    [placed, catalog],
-  )
-  const totalBudget = budgets.reduce((s, b) => s + b.total, 0)
 
   const handleSave = async () => {
     setSaving(true)
@@ -79,12 +68,8 @@ export function Environment({
       `👤 Cliente: ${project.cliente}`,
       `🏠 Ambiente: ${AMBIENTE_LABEL[project.ambiente] ?? project.ambiente}`,
       `📦 Módulos: ${project.modulos.length}`,
-      `💰 Total estimado: ${totalBudget.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,
       '',
-      project.modulos.map((m, i) => {
-        const b = budgets.find((x) => x.module.id === m.id)
-        return `${i + 1}. ${m.nome} — ${fmtLength(m.config.largura, unit)} × ${fmtLength(m.config.altura, unit)} × ${fmtLength(m.config.profundidade, unit)} — ${(b?.total ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
-      }).join('\n'),
+      project.modulos.map((m, i) => `${i + 1}. ${m.nome} — ${fmtLength(m.config.largura, unit)} × ${fmtLength(m.config.altura, unit)} × ${fmtLength(m.config.profundidade, unit)}`).join('\n'),
     ].join('\n')
 
     if (navigator.share) {
@@ -102,242 +87,188 @@ export function Environment({
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 pt-4 pb-28">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-1">
-        {readOnly ? (
-          <a href={window.location.origin} className="flex items-center gap-1.5 text-xs bg-wood-500 hover:bg-wood-600 text-white font-bold px-3.5 py-2 rounded-xl transition-all active:scale-95 no-print">
-            Criar meu projeto no Marceneiro 3D
-          </a>
-        ) : (
-          <button type="button" onClick={onBack} className="flex items-center gap-1 text-sm text-steel-400 active:text-steel-200 transition-colors">
-            <ArrowLeft size={16} />
-            Projetos
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={onToggleStatus}
-          title="Alternar rascunho/aprovado"
-          className={`ml-auto rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${
-            project.status === 'aprovado'
-              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-              : 'bg-steel-600/40 text-steel-300 border border-steel-600/40'
-          }`}
-        >
-          {project.status === 'aprovado' ? '✓ Aprovado' : '⏳ Rascunho'}
-        </button>
-      </div>
-
-      <h1 className="text-2xl font-bold text-steel-50">{project.nome}</h1>
-      <p className="text-sm text-steel-400 mt-0.5">
-        {AMBIENTE_LABEL[project.ambiente] ?? project.ambiente} · {project.cliente} ·{' '}
-        <span className="text-steel-300">{project.modulos.length} módulo{project.modulos.length === 1 ? '' : 's'}</span>
-        {totalWidth > 0 && ` · ${fmtLength(totalWidth, unit)}`}
-      </p>
-
+    <div className="h-[100dvh] w-full flex flex-col md:flex-row bg-bg-base overflow-hidden">
       {/* 3D Canvas */}
-      <div className="mt-4 h-72 rounded-2xl overflow-hidden border border-steel-700/60 bg-steel-900/60 shadow-xl">
+      <div className="flex-1 relative h-full">
         <EnvironmentScene pieces={pieces} totalWidth={totalWidth} depth={depth} />
-      </div>
 
-      {/* Ações */}
-      <div className="mt-4 flex items-center gap-2 flex-wrap no-print">
-        {!readOnly && (
-          <button
-            type="button"
-            onClick={onAddModule}
-            className="flex items-center gap-2 rounded-xl bg-wood-500 text-white text-sm font-semibold px-4 py-2.5 active:bg-wood-600 transition-colors shadow-lg shadow-wood-500/10"
-          >
-            <Plus size={16} />
-            Adicionar módulo
-          </button>
-        )}
-        {!readOnly && (
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-2 rounded-xl bg-steel-700 text-steel-100 text-sm font-semibold px-4 py-2.5 active:bg-steel-600 transition-colors disabled:opacity-50"
-          >
-            {saving ? <RefreshCw size={15} className="animate-spin" /> : saved ? <Check size={15} className="text-emerald-400" /> : <Save size={15} />}
-            {saved ? 'Salvo!' : 'Salvar'}
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={handleShare}
-          className="flex items-center gap-2 rounded-xl bg-steel-700 text-steel-100 text-sm font-semibold px-4 py-2.5 active:bg-steel-600 transition-colors"
-          title="Compartilhar proposta"
-        >
-          <Share2 size={15} />
-          Compartilhar
-        </button>
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="flex items-center gap-2 rounded-xl bg-steel-700 text-steel-100 text-sm font-semibold px-4 py-2.5 active:bg-steel-600 transition-colors"
-          title="Imprimir proposta ou salvar como PDF"
-        >
-          Imprimir / PDF
-        </button>
-      </div>
-
-      {/* Lista de módulos */}
-      {project.modulos.length > 0 && (
-        <div className="mt-5">
-          <h2 className="text-xs font-bold text-steel-400 uppercase tracking-wider mb-3">Módulos do Projeto</h2>
-          <ul ref={parentRef} className="space-y-2">
-            {project.modulos.map((m, i) => {
-              const b = budgets.find((x) => x.module.id === m.id)
-              return (
-                <li key={m.id} className="group rounded-2xl border border-steel-700/60 bg-steel-800/40 hover:border-steel-600/80 transition-colors p-4">
-                  <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 grid place-items-center rounded-lg bg-wood-500/15 text-wood-400 text-xs font-bold">
-                      {i + 1}
-                    </span>
-                    <span className="flex-1 truncate font-semibold text-steel-50 group-hover:text-wood-400 transition-colors">{m.nome}</span>
-                    <span className="font-mono text-sm text-wood-400 tabular-nums font-bold">
-                      {(b?.total ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </span>
-                  </div>
-                  <div className="mt-1.5 text-xs text-steel-500 font-mono">
-                    L {fmtLength(m.config.largura, unit)} × A {fmtLength(m.config.altura, unit)} × P {fmtLength(m.config.profundidade, unit)}
-                    {m.config.portas.quantidade > 0 && ` · ${m.config.portas.quantidade} porta${m.config.portas.quantidade > 1 ? 's' : ''}`}
-                    {m.config.gavetas.quantidade > 0 && ` · ${m.config.gavetas.quantidade} gaveta${m.config.gavetas.quantidade > 1 ? 's' : ''}`}
-                  </div>
-                  {!readOnly && (
-                    <div className="mt-2.5 flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => onEditModule(m.id)}
-                        className="flex items-center gap-1.5 rounded-lg bg-steel-700/60 hover:bg-steel-600/60 px-3 py-1.5 text-xs font-medium text-steel-200 active:scale-95 transition-all"
-                      >
-                        <Pencil size={12} />
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDuplicate(m)}
-                        className="flex items-center gap-1.5 rounded-lg bg-steel-700/60 hover:bg-steel-600/60 px-3 py-1.5 text-xs font-medium text-steel-300 active:scale-95 transition-all"
-                      >
-                        <Copy size={12} />
-                        Duplicar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onRemoveModule(m.id)}
-                        className="ml-auto flex items-center gap-1.5 rounded-lg bg-steel-700/60 hover:bg-red-500/20 hover:text-red-300 px-3 py-1.5 text-xs font-medium text-steel-400 active:scale-95 transition-all"
-                      >
-                        <Trash2 size={12} />
-                        Remover
-                      </button>
-                    </div>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
-        </div>
-      )}
-
-      {project.modulos.length === 0 && (
-        <div className="mt-6 rounded-2xl border border-dashed border-steel-600/70 p-10 text-center text-sm text-steel-400">
-          <div className="text-3xl mb-3">📦</div>
-          <div className="font-semibold text-steel-300 mb-1">Ambiente vazio</div>
-          Adicione módulos prontos para começar o projeto 3D.
-          <button type="button" onClick={onAddModule} className="mt-4 flex items-center gap-1.5 mx-auto rounded-xl bg-wood-500/15 text-wood-400 px-4 py-2.5 text-sm font-semibold active:bg-wood-500/25 hover:bg-wood-500/20 transition-colors">
-            <Plus size={15} />
-            Adicionar primeiro módulo
-          </button>
-        </div>
-      )}
-
-      {/* Bottom bar fixa */}
-      <div className="fixed bottom-0 no-print inset-x-0 border-t border-steel-700/60 bg-steel-900/96 backdrop-blur-xl px-4 py-3">
-        <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
-          <div>
-            <div className="text-[10px] text-steel-500 uppercase tracking-wider font-semibold">Total estimado</div>
-            <div className="font-mono text-xl font-bold text-wood-400 tabular-nums leading-tight">
-              {totalBudget.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+        {/* Top HUD */}
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none z-10 gap-3">
+          <div className="flex items-center gap-2 pointer-events-auto min-w-0">
+            {!readOnly ? (
+              <button
+                type="button"
+                onClick={onBack}
+                id="btn-back"
+                className="shrink-0 w-11 h-11 rounded-full bg-bg-panel shadow-lg border border-border-strong flex items-center justify-center text-text-base hover:bg-bg-panel-hover active:scale-90 transition-all"
+              >
+                <ArrowLeft size={18} />
+              </button>
+            ) : (
+              <a href={window.location.origin} className="text-xs bg-wood-500 hover:bg-wood-600 text-white font-bold px-3 py-2 rounded-xl transition-all shadow-lg">
+                Criar no Marceneiro 3D
+              </a>
+            )}
+            <div className="bg-bg-panel shadow-lg rounded-xl px-4 py-2.5 flex flex-col justify-center border border-border-strong min-w-0">
+              <h1 className="text-sm font-bold text-text-base truncate leading-tight">{project.nome}</h1>
+              <p className="text-[10px] text-text-muted font-medium">
+                {AMBIENTE_LABEL[project.ambiente] ?? project.ambiente} · {project.modulos.length} módulos
+              </p>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-[10px] text-steel-500 uppercase tracking-wider font-semibold">{project.modulos.length} módulos</div>
-            <div className="text-sm text-steel-300 font-medium">{AMBIENTE_LABEL[project.ambiente] ?? project.ambiente}</div>
+
+          <div className="flex items-center gap-2 pointer-events-auto shrink-0">
+            {/* Theme Toggle */}
+            <button
+              type="button"
+              id="btn-theme-toggle"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="w-11 h-11 rounded-xl bg-bg-panel border border-border-strong shadow-lg flex items-center justify-center text-text-muted hover:text-text-base hover:bg-bg-panel-hover active:scale-90 transition-all"
+              title={theme === 'dark' ? 'Modo Claro (para uso diurno)' : 'Modo Escuro'}
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+
+            {/* Status badge */}
+            <button
+              type="button"
+              onClick={onToggleStatus}
+              className={`rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-wide border shadow-sm transition-all ${
+                project.status === 'aprovado'
+                  ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700'
+                  : 'bg-bg-panel text-text-muted border-border-strong'
+              }`}
+            >
+              {project.status === 'aprovado' ? '✓ Aprovado' : '⏳ Rascunho'}
+            </button>
           </div>
         </div>
+
+        {/* Empty State */}
+        {project.modulos.length === 0 && !readOnly && (
+          <div className="absolute inset-0 flex items-end justify-center pb-[45vh] md:pb-0 md:items-center pointer-events-none z-10">
+            <button
+              type="button"
+              id="btn-add-module-empty"
+              onClick={onAddModule}
+              className="pointer-events-auto flex flex-col items-center gap-3 rounded-2xl bg-bg-panel border-2 border-dashed border-border-strong p-8 shadow-xl hover:border-wood-500 hover:shadow-wood-500/10 active:scale-95 transition-all"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-wood-50 dark:bg-wood-500/20 text-wood-500 flex items-center justify-center">
+                <Plus size={32} />
+              </div>
+              <div className="text-center">
+                <h3 className="text-text-base font-bold text-base mb-1">Adicionar Módulo</h3>
+                <p className="text-text-muted text-sm">Clique aqui para começar</p>
+              </div>
+            </button>
+          </div>
+        )}
       </div>
-    
-      {/* Printable Invoice / Proposal Layout (PDF) */}
-      <div className="hidden print-only bg-white text-slate-900 p-8 font-sans max-w-4xl mx-auto">
-        <div className="border-b-2 border-slate-200 pb-4 mb-6">
-          <h1 className="text-3xl font-bold text-slate-800">Proposta de Marcenaria</h1>
-          <p className="text-sm text-slate-500 mt-1">Gerado pelo Marceneiro 3D</p>
+
+      {/* Sidebar */}
+      <div className="w-full h-[42vh] md:w-[360px] md:h-full bg-bg-panel border-t md:border-t-0 md:border-l border-border-subtle flex flex-col shadow-2xl z-20">
+        {/* Sidebar Header */}
+        <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between shrink-0">
+          <h2 className="text-sm font-bold text-text-base uppercase tracking-wide">
+            Módulos ({project.modulos.length})
+          </h2>
+          {!readOnly && (
+            <button
+              type="button"
+              id="btn-add-module-sidebar"
+              onClick={onAddModule}
+              className="flex items-center gap-1.5 rounded-lg bg-wood-500 hover:bg-wood-600 text-white text-xs font-bold px-3 py-2 transition-all shadow-sm active:scale-95"
+            >
+              <Plus size={14} /> Adicionar
+            </button>
+          )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          <div>
-            <div className="text-xs font-bold text-slate-400 uppercase">Projeto</div>
-            <div className="text-lg font-semibold text-slate-800">{project.nome}</div>
-          </div>
-          <div>
-            <div className="text-xs font-bold text-slate-400 uppercase">Cliente</div>
-            <div className="text-lg font-semibold text-slate-800">{project.cliente}</div>
-          </div>
-          <div>
-            <div className="text-xs font-bold text-slate-400 uppercase">Ambiente</div>
-            <div className="text-base text-slate-700">{AMBIENTE_LABEL[project.ambiente] ?? project.ambiente}</div>
-          </div>
-          <div>
-            <div className="text-xs font-bold text-slate-400 uppercase">Data</div>
-            <div className="text-base text-slate-700">{new Date().toLocaleDateString('pt-BR')}</div>
-          </div>
-        </div>
+        {/* Module List */}
+        <div className="flex-1 overflow-y-auto p-3 custom-scrollbar space-y-2">
+          <ul ref={parentRef} className="space-y-2">
+            {project.modulos.map((m, i) => (
+              <li
+                key={m.id}
+                className="group rounded-xl bg-bg-base border border-border-subtle hover:border-border-strong transition-all p-3"
+              >
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span className="shrink-0 w-6 h-6 rounded-md bg-wood-50 dark:bg-wood-500/20 text-wood-600 dark:text-wood-400 text-[10px] font-bold flex items-center justify-center">
+                    {i + 1}
+                  </span>
+                  <span className="truncate font-bold text-sm text-text-base">{m.nome}</span>
+                </div>
 
-        <h2 className="text-lg font-bold text-slate-800 border-b border-slate-200 pb-1.5 mb-3">Módulos</h2>
-        <table className="w-full text-left border-collapse mb-8 text-sm">
-          <thead>
-            <tr className="border-b border-slate-300 text-slate-500 font-semibold">
-              <th className="py-2">Item</th>
-              <th className="py-2">Módulo</th>
-              <th className="py-2">Dimensões (L × A × P)</th>
-              <th className="py-2 text-right">Preço Estimado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {project.modulos.map((m, idx) => {
-              const b = budgets.find((x) => x.module.id === m.id)
-              return (
-                <tr key={m.id} className="border-b border-slate-100 text-slate-700">
-                  <td className="py-3 font-semibold">{idx + 1}</td>
-                  <td className="py-3">
-                    <div className="font-semibold">{m.nome}</div>
-                    <div className="text-xs text-slate-400">
-                      MDF Interno: {m.config.materialInterno} · MDF Externo: {m.config.materialExterno}
+                <div className="text-[11px] text-text-muted font-mono mb-2.5 bg-bg-panel-hover rounded-lg px-2.5 py-1.5">
+                  L {fmtLength(m.config.largura, unit)} × A {fmtLength(m.config.altura, unit)} × P {fmtLength(m.config.profundidade, unit)}
+                  {(m.config.portas.quantidade > 0 || m.config.gavetas.quantidade > 0) && (
+                    <div className="mt-1 flex items-center gap-3 text-text-muted">
+                      {m.config.portas.quantidade > 0 && <span>{m.config.portas.quantidade} porta(s)</span>}
+                      {m.config.gavetas.quantidade > 0 && <span>{m.config.gavetas.quantidade} gaveta(s)</span>}
                     </div>
-                  </td>
-                  <td className="py-3 font-mono">{m.config.largura} × {m.config.altura} × {m.config.profundidade} mm</td>
-                  <td className="py-3 text-right font-mono font-semibold">
-                    {(b?.total ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                  )}
+                </div>
 
-        <div className="flex flex-col items-end gap-1.5 border-t border-slate-200 pt-4 mb-12">
-          <div className="text-xs text-slate-500 uppercase font-semibold">Valor Total da Proposta</div>
-          <div className="text-3xl font-bold text-slate-800 font-mono">
-            {totalBudget.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                {!readOnly && (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      id={`btn-edit-${m.id}`}
+                      onClick={() => onEditModule(m.id)}
+                      className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold px-2 py-2 transition-all active:scale-95 shadow-sm"
+                    >
+                      <Pencil size={13} /> Editar
+                    </button>
+                    <button
+                      type="button"
+                      id={`btn-dup-${m.id}`}
+                      onClick={() => handleDuplicate(m)}
+                      className="w-9 flex items-center justify-center rounded-lg bg-bg-panel-hover border border-border-strong text-text-muted hover:text-text-base py-2 transition-all active:scale-90"
+                      title="Duplicar módulo"
+                    >
+                      <Copy size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      id={`btn-del-${m.id}`}
+                      onClick={() => onRemoveModule(m.id)}
+                      className="w-9 flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 py-2 transition-all active:scale-90 border border-red-100 dark:border-red-500/20"
+                      title="Remover módulo"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Bottom Actions */}
+        {!readOnly && (
+          <div className="p-3 border-t border-border-subtle flex items-center gap-2 shrink-0 bg-bg-panel">
+            <button
+              type="button"
+              id="btn-save"
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white text-sm font-bold px-4 py-3 shadow-sm transition-all active:scale-95"
+            >
+              {saving ? <RefreshCw size={15} className="animate-spin" /> : saved ? <Check size={15} /> : <Save size={15} />}
+              {saved ? 'Salvo!' : saving ? 'Salvando...' : 'Salvar'}
+            </button>
+            <button
+              type="button"
+              id="btn-share"
+              onClick={handleShare}
+              className="w-12 h-[46px] flex items-center justify-center rounded-xl bg-bg-panel-hover border border-border-strong text-text-muted hover:text-text-base transition-all active:scale-90"
+              title="Compartilhar / Copiar resumo"
+            >
+              <Share2 size={16} />
+            </button>
           </div>
-        </div>
-
-        <div className="text-center text-xs text-slate-400 border-t border-slate-100 pt-6">
-          Esta é uma estimativa de custos gerada pelo aplicativo Marceneiro 3D.
-        </div>
+        )}
       </div>
-</div>
+    </div>
   )
 }

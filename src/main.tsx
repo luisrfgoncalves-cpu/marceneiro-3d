@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { registerSW } from 'virtual:pwa-register'
 import './index.css'
 import App from './App'
+import { ThemeProvider } from './components/ThemeProvider'
 
 // Registro do Service Worker (Anexo A3) — autoUpdate silencioso.
 // Quando há nova versão, o SW é instalado em background e ativa
@@ -19,6 +20,6 @@ registerSW({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ThemeProvider defaultTheme="light"><App /></ThemeProvider>
   </StrictMode>,
 )

@@ -6,6 +6,8 @@ import type { EngineRules } from '../rules'
 import { box, type Region } from '../geometry'
 import { computeFundo } from '../rules/fundo'
 import { computeTaponamento } from '../rules/taponamento'
+import { computeGavetaCaixa } from '../rules/gaveta'
+import { layoutFrentesHorizontais } from '../rules/portas'
 import { computePistons, layoutDoors, layoutVasculantes } from '../rules/portas'
 import { computeHingeOffsets, resolveHingeConflicts, type ConflictZone } from '../rules/dobradicas'
 import type { Hinge, ModuloConfig, Piece, Piston, Warning } from '../types'
@@ -133,6 +135,61 @@ export function computeArmario(config: ModuloConfig, rules: EngineRules) {
       rules,
     ),
   )
+
+
+  // Gavetas Internas (na parte inferior do vão)
+  if (config.gavetas && config.gavetas.quantidade > 0) {
+    const n = config.gavetas.quantidade
+    const frenteH = rules.gavetaFrenteAltura
+    const minGap = rules.vaoHorizontal
+    const gavetaZoneH = Math.min(n * frenteH + (n - 1) * minGap, Math.max(1, interior.h))
+    
+    const gavetaZone = {
+      ...interior,
+      y: interior.y, 
+      h: gavetaZoneH,
+    }
+    
+    const recuoInterno = (config.portas.espessura || 18) + 25; // Folga para dobradiças/portas
+    const frentes = layoutFrentesHorizontais(gavetaZone, n, frenteH, rules)
+    const frenteEsp = rules.gavetaFrenteEspessura
+    for (const f of frentes) {
+      pieces.push(
+        box({
+          name: `Frente gaveta interna ${f.index + 1}`,
+          w: Math.max(1, f.w),
+          h: Math.max(1, f.h),
+          d: Math.max(1, frenteEsp),
+          position: { x: Math.max(0, f.x), y: Math.max(interior.y, f.y), z: Math.max(0, P - recuoInterno - frenteEsp) },
+          materialId: config.materialInterno,
+          edgeBanding: { top: true, bottom: true, left: true, right: true },
+        }),
+      )
+      
+      const gavetaAltura = rules.gavetaAlturaPadrao
+      const gavetaY = f.y + (f.h - gavetaAltura)
+      pieces.push(
+        ...computeGavetaCaixa(
+          {
+            x: interior.x,
+            y: gavetaY,
+            z: 0,
+            largura: interior.w,
+            profundidade: Math.max(1, P - recuoInterno - rules.gavetaRecuoTrilho),
+            altura: gavetaAltura,
+            sistema: config.gavetas.sistema,
+            espessura: config.gavetas.espessura,
+          },
+          config.materialInterno,
+          rules,
+        ),
+      )
+    }
+    
+    // Reduz a área para prateleiras para que não conflitem com as gavetas
+    interior.y += gavetaZoneH + rules.prateleiraFolga;
+    interior.h -= gavetaZoneH + rules.prateleiraFolga;
+  }
 
   // Prateleiras (Seção 5.6) — divisão em vãos iguais
   const shelfZones: ConflictZone[] = []

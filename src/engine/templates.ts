@@ -132,7 +132,7 @@ export function torre(overrides: Partial<ModuloConfig> = {}): ModuloConfig {
   })
 }
 
-export function guardaRoupa4Portas(overrides: Partial<ModuloConfig> = {}): ModuloConfig {
+export function guardaRoupa2Portas(overrides: Partial<ModuloConfig> = {}): ModuloConfig {
   return armario2Portas({
     moduloTipo: 'guarda_roupa',
     ambiente: 'dormitorio',
@@ -225,7 +225,7 @@ export const MODULE_TEMPLATES: ModuleTemplate[] = [
   { id: 'armario_2p', nome: 'Armário 2 portas', descricao: 'Caixaria com base e chapéu passando', cria: armario2Portas },
   { id: 'aereo_2p', nome: 'Aéreo 2 portas', descricao: 'Armário suspenso, sem rodapé', cria: aereo2Portas },
   { id: 'torre', nome: 'Torre', descricao: 'Módulo alto com prateleiras', cria: torre },
-  { id: 'guarda_roupa_4p', nome: 'Guarda-roupa 4 portas', descricao: 'Grande com portas casal', cria: guardaRoupa4Portas },
+  { id: 'guarda_roupa_2p', nome: 'Guarda-roupa 2 portas', descricao: 'Tamanho padrão, 2 portas e gavetas', cria: guardaRoupa2Portas },
   { id: 'home_rack', nome: 'Home / Rack', descricao: 'Módulo para sala com configuração livre', cria: homeRack },
   { id: 'pia_pedra', nome: 'Pia de pedra', descricao: 'Bancada com tampo em granito/mármore e cuba embutida', cria: piaPedra },
 ]

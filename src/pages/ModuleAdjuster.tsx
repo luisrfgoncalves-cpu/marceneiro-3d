@@ -1,11 +1,5 @@
-﻿// ModuleAdjuster — Layout profissional para mobile:
-// • 3D canvas ocupa ~75% da tela (fullscreen)
-// • Bottom sheet deslizável (collapsed/expanded) com abas
-// • Footer CTA fixo sempre visível acima do sheet
-// • Sem sobreposição de conteúdo
-
 import { useMemo, useState } from 'react'
-import { ArrowLeft, Check, TriangleAlert, Layout, Palette, Wrench, List, Save, ChevronUp, ChevronDown } from 'lucide-react'
+import { ArrowLeft, Check, TriangleAlert, Layout, Palette, Wrench, List, Save } from 'lucide-react'
 import type { EngineRules } from '../engine/rules'
 import { computeModule } from '../engine/computeModule'
 import { estimateCost, type PriceCatalog } from '../engine/cost'
@@ -83,7 +77,6 @@ const STONE_PEDRAS: Array<{ value: 'granito' | 'marmore' | 'quartzito' | 'silest
   { value: 'porcelana', label: 'Porcelana Beton' },
 ]
 
-
 const FITAS: Array<{ value: string; label: string }> = [
   { value: 'fita_proadec_22mm_maderado_x', label: '22mm Maderado' },
   { value: 'fita_proadec_22mm_branco_tx', label: '22mm Branco TX' },
@@ -99,17 +92,17 @@ const VEIOS: Array<{ value: 'vertical' | 'horizontal'; label: string }> = [
 
 type TabID = 'medidas' | 'cores' | 'ferragens' | 'pecas'
 
-const SHEET_HEIGHTS = {
-  collapsed: 220,
-  expanded: 520,
-}
-
 export function ModuleAdjuster({ config, onChange, rules, onBack, onConfirm, confirmLabel = 'Confirmar', catalog }: ModuleAdjusterProps) {
   const [unit, setUnit] = useUnitPref()
   const [activeTab, setActiveTab] = useState<TabID>('medidas')
-  const [sheetExpanded, setSheetExpanded] = useState(false)
   const result = useMemo(() => computeModule(config, rules), [config, rules])
-  const budget = useMemo(() => (catalog ? estimateCost(config, result, catalog) : null), [catalog, config, result])
+  
+  // Apenas mostrar orçamento se o catálogo tiver itens e a soma for maior que 0
+  const budget = useMemo(() => {
+    if (!catalog || Object.keys(catalog).length === 0) return null;
+    const est = estimateCost(config, result, catalog);
+    return est.total > 0 ? est : null;
+  }, [catalog, config, result])
 
   const patch = (p: Partial<ModuloConfig>) => onChange({ ...config, ...p })
   const patchPia = (p: Partial<NonNullable<ModuloConfig['pia']>>) => onChange({ ...config, pia: { ...config.pia, ...p } as any })
@@ -144,129 +137,105 @@ export function ModuleAdjuster({ config, onChange, rules, onBack, onConfirm, con
     }
   }
 
-  const sheetH = sheetExpanded ? SHEET_HEIGHTS.expanded : SHEET_HEIGHTS.collapsed
-  // CTA height = 72px
-  const ctaH = 72
-
   return (
-    <div className="h-dvh flex flex-col bg-[#0f1119] text-steel-100 overflow-hidden">
+    <div className="h-[100dvh] w-full flex flex-col md:flex-row bg-bg-base text-text-base overflow-hidden">
 
-      {/* ── Header ── */}
-      <header className="flex items-center gap-2 px-3 py-2 bg-steel-900/80 backdrop-blur border-b border-steel-800/60 z-20 shrink-0">
-        <button
-          type="button"
-          onClick={onBack}
-          className="w-9 h-9 grid place-items-center rounded-xl bg-steel-800/70 text-steel-200 active:scale-95 transition-transform"
-          aria-label="Voltar"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-sm font-bold text-steel-50 truncate leading-tight">{config.nome}</h1>
-          <p className="text-[11px] text-steel-500 font-mono leading-tight">
-            {fmtLength(config.largura, unit)}×{fmtLength(config.altura, unit)}×{fmtLength(config.profundidade, unit)}
-          </p>
-        </div>
-        {/* Unidades */}
-        <div className="flex rounded-lg overflow-hidden border border-steel-700/50">
-          {(['mm', 'cm'] as const).map((u) => (
-            <button
-              key={u}
-              type="button"
-              onClick={() => setUnit(u)}
-              className={`px-2.5 py-1 text-[11px] font-bold uppercase transition-colors ${unit === u ? 'bg-wood-500 text-white' : 'bg-steel-800/60 text-steel-500'}`}
-            >
-              {u}
-            </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={handleSaveAsTemplate}
-          disabled={savingTemplate}
-          className="w-9 h-9 grid place-items-center rounded-xl bg-steel-800/70 text-steel-300 active:scale-95 transition-transform"
-          title="Salvar como Template Pessoal"
-        >
-          <Save size={15} />
-        </button>
-      </header>
-
-      {/* ── 3D Canvas — ocupa tudo que sobra ── */}
-      <div className="flex-1 min-h-0 relative" style={{ paddingBottom: sheetH + ctaH }}>
+      {/* ── 3D Canvas Area ── */}
+      <div className="flex-1 min-h-[50vh] relative">
         <div className="absolute inset-0">
           <Scene result={result} />
         </div>
 
-        {/* Warnings overlay */}
+        {/* Top Header Overlay */}
+        <header className="absolute top-4 left-4 right-4 flex items-center gap-2 z-10 pointer-events-none">
+          <button
+            type="button"
+            onClick={onBack}
+            className="pointer-events-auto w-10 h-10 grid place-items-center rounded-full bg-bg-panel shadow-lg border border-border-strong text-text-base hover:bg-bg-panel-hover active:scale-90 transition-all"
+            aria-label="Voltar"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div className="bg-bg-panel shadow-lg rounded-xl px-4 py-2.5 flex flex-col justify-center border border-border-strong flex-1 min-w-0">
+            <h1 className="text-sm font-bold text-text-base truncate leading-tight">{config.nome}</h1>
+            <p className="text-[10px] text-text-muted font-medium">
+              L {fmtLength(config.largura, unit)} × A {fmtLength(config.altura, unit)} × P {fmtLength(config.profundidade, unit)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleSaveAsTemplate}
+            disabled={savingTemplate}
+            className="pointer-events-auto w-10 h-10 grid place-items-center rounded-xl bg-bg-panel shadow-lg border border-border-strong text-text-muted hover:text-text-base hover:bg-bg-panel-hover active:scale-90 transition-all"
+            title="Salvar como Template Pessoal"
+          >
+            <Save size={16} />
+          </button>
+        </header>
+
+        {/* Warnings Overlay */}
         {result.warnings.length > 0 && (
-          <div className="absolute top-2 left-2 right-2 space-y-1 z-10 pointer-events-none">
+          <div className="absolute top-16 left-4 right-4 space-y-1.5 z-10 pointer-events-none max-w-sm">
             {result.warnings.map((w, i) => (
-              <div key={i} className="bg-amber-950/90 border border-amber-800/50 backdrop-blur flex items-start gap-2 rounded-xl px-3 py-2 text-xs text-amber-300 shadow-lg">
-                <TriangleAlert size={13} className="mt-0.5 shrink-0" />
-                <span>{w.message}</span>
+              <div key={i} className="bg-amber-950/90 border border-amber-800/50 backdrop-blur-md flex items-start gap-2 rounded-xl px-3 py-2 text-[11px] text-amber-200 shadow-lg pointer-events-auto">
+                <TriangleAlert size={14} className="mt-0.5 shrink-0 text-amber-400" />
+                <span className="leading-tight">{w.message}</span>
               </div>
             ))}
           </div>
         )}
-
-        {/* Dimensões rápidas overlay (canto inferior esquerdo) */}
-        <div className="absolute left-3 bottom-3 pointer-events-none">
-          <div className="bg-steel-900/80 backdrop-blur rounded-xl px-3 py-2 border border-steel-700/40">
-            <div className="text-[10px] text-steel-500 uppercase tracking-wider font-bold">Dimensões</div>
-            <div className="text-xs text-steel-100 font-mono mt-0.5">
-              L {fmtLength(config.largura, unit)} × A {fmtLength(config.altura, unit)} × P {fmtLength(config.profundidade, unit)}
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* ── Bottom Sheet ── */}
-      <div
-        className="fixed left-0 right-0 bg-steel-900 border-t border-steel-700/60 z-20 transition-all duration-300 ease-in-out"
-        style={{ bottom: ctaH, height: sheetH }}
-      >
-        {/* Handle + Abas */}
-        <div className="flex items-center border-b border-steel-800/60">
-          {/* Tab buttons */}
+      {/* ── Sidebar (Tabs & Settings) ── */}
+      <div className="w-full h-[50vh] md:w-[380px] md:h-full bg-bg-panel border-t md:border-t-0 md:border-l border-border-subtle flex flex-col shadow-2xl z-20">
+        
+        {/* Tabs Header */}
+        <div className="flex items-center border-b border-border-subtle p-1 shrink-0">
           {(
             [
-              { id: 'medidas', label: 'Medidas', icon: <Layout size={15} /> },
-              { id: 'cores', label: 'Cores', icon: <Palette size={15} /> },
-              { id: 'ferragens', label: 'Ferragens', icon: <Wrench size={15} /> },
-              { id: 'pecas', label: 'Peças', icon: <List size={15} /> },
+              { id: 'medidas', label: 'Medidas', icon: <Layout size={14} /> },
+              { id: 'cores', label: 'Cores', icon: <Palette size={14} /> },
+              { id: 'ferragens', label: 'Ferragens', icon: <Wrench size={14} /> },
+              { id: 'pecas', label: 'Peças', icon: <List size={14} /> },
             ] as const
           ).map((tab) => (
             <button
               key={tab.id}
               type="button"
-              onClick={() => { setActiveTab(tab.id); setSheetExpanded(true) }}
-              className={`flex-1 py-2.5 flex flex-col items-center gap-0.5 text-[10px] font-bold transition-all ${
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 py-2 flex items-center justify-center gap-1.5 text-[11px] font-bold rounded-lg transition-all ${
                 activeTab === tab.id
-                  ? 'text-wood-400 border-b-2 border-wood-500'
-                  : 'text-steel-500'
+                  ? 'bg-wood-50 dark:bg-wood-500/20 text-wood-600 dark:text-wood-400'
+                  : 'text-text-muted hover:text-text-base hover:bg-bg-panel-hover'
               }`}
             >
               {tab.icon}
-              <span>{tab.label}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
-          {/* Toggle expand */}
-          <button
-            type="button"
-            onClick={() => setSheetExpanded((e) => !e)}
-            className="px-3 py-2 text-steel-500 active:text-steel-200"
-            aria-label={sheetExpanded ? 'Minimizar painel' : 'Expandir painel'}
-          >
-            {sheetExpanded ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
-          </button>
         </div>
 
-        {/* Conteúdo scrollável */}
-        <div className="overflow-y-auto h-full pb-4 px-4 pt-3 space-y-4">
-
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
           {activeTab === 'medidas' && (
-            <div className="space-y-4">
-              <div className="space-y-3">
+            <div className="space-y-6">
+              <div className="space-y-4 bg-bg-base p-4 rounded-xl border border-border-subtle">
+                <div className="flex items-center justify-between mb-2">
+                   <div className="text-xs font-bold text-text-muted uppercase tracking-wider">Dimensões Externas</div>
+                   {/* Unit toggle inline */}
+                   <div className="flex rounded-md overflow-hidden border border-border-strong">
+                     {(['mm', 'cm'] as const).map((u) => (
+                       <button
+                         key={u}
+                         type="button"
+                         onClick={() => setUnit(u)}
+                         className={`px-2 py-0.5 text-[10px] font-bold uppercase transition-colors ${unit === u ? 'bg-wood-500 text-white' : 'bg-steel-800/60 text-steel-500'}`}
+                       >
+                         {u}
+                       </button>
+                     ))}
+                   </div>
+                </div>
                 {dims.map((d) => (
                   <Stepper
                     key={d.label}
@@ -278,16 +247,21 @@ export function ModuleAdjuster({ config, onChange, rules, onBack, onConfirm, con
                     decimals={unit === 'cm' ? 1 : 0}
                   />
                 ))}
-                <div className="grid grid-cols-2 gap-x-4">
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
                   <Stepper label="Portas" value={config.portas.quantidade} onChange={(v) => patchPortas({ quantidade: v })} min={0} max={8} step={1} unit="un" />
                   <Stepper label="Gavetas" value={config.gavetas.quantidade} onChange={(v) => patchGavetas({ quantidade: v })} min={0} max={8} step={1} unit="un" />
                 </div>
                 <Stepper label="Prateleiras" value={config.prateleiras.quantidade} onChange={(v) => patch({ prateleiras: { ...config.prateleiras, quantidade: v } })} min={0} max={8} step={1} unit="un" />
               </div>
-              <Segmented label="Ambiente" value={config.ambiente} options={AMBIENTES} onChange={(v) => patch({ ambiente: v })} />
+
+              <Segmented label="Ambiente Sugerido" value={config.ambiente} options={AMBIENTES} onChange={(v) => patch({ ambiente: v })} />
+              
               {config.moduloTipo === 'pia' && (
-                <div className="space-y-3 pt-3 border-t border-steel-800">
-                  <div className="text-xs font-bold text-wood-400 uppercase tracking-wider">Acessórios da Pia</div>
+                <div className="space-y-4 pt-4 border-t border-steel-800/80">
+                  <div className="text-xs font-bold text-wood-500 dark:text-wood-400 uppercase tracking-wider">Acessórios da Pia</div>
                   
                   {/* Cuba Toggle */}
                   <Toggle
@@ -299,7 +273,6 @@ export function ModuleAdjuster({ config, onChange, rules, onBack, onConfirm, con
                           cuba: { largura: 560, profundidade: 430, posX: 100, quantidade: 1 }
                         })
                       } else {
-                        // Remove cuba
                         const copy = { ...config }
                         if (copy.pia) {
                           const { cuba, ...rest } = copy.pia
@@ -309,7 +282,7 @@ export function ModuleAdjuster({ config, onChange, rules, onBack, onConfirm, con
                     }}
                   />
                   {config.pia?.cuba && (
-                    <div className="space-y-2 pl-3 border-l-2 border-wood-500/30">
+                    <div className="space-y-3 pl-3 border-l-2 border-wood-500/30">
                       <Stepper
                         label="Largura Cuba"
                         value={toDisplay(config.pia.cuba.largura, unit)}
@@ -348,7 +321,7 @@ export function ModuleAdjuster({ config, onChange, rules, onBack, onConfirm, con
                     }}
                   />
                   {config.pia?.cooktop && (
-                    <div className="space-y-2 pl-3 border-l-2 border-wood-500/30">
+                    <div className="space-y-3 pl-3 border-l-2 border-wood-500/30">
                       <Stepper
                         label="Largura Cooktop"
                         value={toDisplay(config.pia.cooktop.largura, unit)}
@@ -360,17 +333,17 @@ export function ModuleAdjuster({ config, onChange, rules, onBack, onConfirm, con
                   )}
                 </div>
               )}
-
             </div>
           )}
 
           {activeTab === 'cores' && (
-            <div className="space-y-4">
-              <ColorPicker label="MDF Interno" value={config.materialInterno} onChange={(id) => patch({ materialInterno: id })} />
-              <ColorPicker label="MDF Externo / Frentes" value={config.materialExterno} onChange={(id) => patch({ materialExterno: id })} />
+            <div className="space-y-6">
+              <ColorPicker label="MDF Interno (Caixaria)" value={config.materialInterno} onChange={(id) => patch({ materialInterno: id })} />
+              <ColorPicker label="MDF Externo (Frentes e Laterais)" value={config.materialExterno} onChange={(id) => patch({ materialExterno: id })} />
+              
               {config.moduloTipo === 'pia' && (
-                <div className="space-y-3 pt-2 border-t border-steel-800">
-                  <div className="text-xs font-bold text-wood-400 uppercase tracking-wider">Tampo de Pedra</div>
+                <div className="space-y-4 pt-2 border-t border-steel-800">
+                  <div className="text-xs font-bold text-wood-500 dark:text-wood-400 uppercase tracking-wider">Tampo de Pedra</div>
                   <Segmented
                     label="Material da Pedra"
                     value={config.pia?.materialPedra ?? 'granito'}
@@ -383,7 +356,7 @@ export function ModuleAdjuster({ config, onChange, rules, onBack, onConfirm, con
                     options={[
                       { value: 20, label: '20 mm' },
                       { value: 30, label: '30 mm' },
-                      { value: 60, label: '60 mm (Meia Esquadria)' }
+                      { value: 60, label: '60 mm (M.E.)' }
                     ]}
                     onChange={(v) => patchPia({ espessuraPedra: v })}
                   />
@@ -391,122 +364,128 @@ export function ModuleAdjuster({ config, onChange, rules, onBack, onConfirm, con
               )}
 
               <Segmented
-                label="Sentido do Veio"
+                label="Sentido do Veio (Global)"
                 value={config.veioGlobal ?? 'vertical'}
                 options={VEIOS}
                 onChange={(v) => patch({ veioGlobal: v as 'vertical' | 'horizontal' })}
               />
-              <div className="space-y-3">
-                <div className="text-xs font-bold text-steel-400 uppercase tracking-wider">Fitas de Borda</div>
-                <Segmented label="Portas" value={fitas.porta ?? config.fitaBorda} options={FITAS} onChange={(v) => patch({ fitas: { ...fitas, porta: v } })} />
-                <Segmented label="Prateleiras" value={fitas.prateleira ?? config.fitaBorda} options={FITAS} onChange={(v) => patch({ fitas: { ...fitas, prateleira: v } })} />
+              <div className="space-y-4 bg-bg-base p-4 rounded-xl border border-border-subtle">
+                <div className="text-xs font-bold text-text-muted uppercase tracking-wider">Fitas de Borda</div>
+                <Segmented label="Portas e Frentes" value={fitas.porta ?? config.fitaBorda} options={FITAS} onChange={(v) => patch({ fitas: { ...fitas, porta: v } })} />
+                <Segmented label="Prateleiras Internas" value={fitas.prateleira ?? config.fitaBorda} options={FITAS} onChange={(v) => patch({ fitas: { ...fitas, prateleira: v } })} />
                 <Segmented label="Tampo/Chapéu" value={fitas.topo ?? config.fitaBorda} options={FITAS} onChange={(v) => patch({ fitas: { ...fitas, topo: v } })} />
               </div>
             </div>
           )}
 
           {activeTab === 'ferragens' && (
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <div className="text-xs font-bold text-steel-400 uppercase tracking-wider">Portas</div>
-                <Segmented label="Tipo" value={config.portas.tipo} options={TIPOS_PORTA} onChange={(v) => patchPortas({ tipo: v })} />
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="text-xs font-bold text-text-muted uppercase tracking-wider">Portas</div>
+                <Segmented label="Tipo de Porta" value={config.portas.tipo} options={TIPOS_PORTA} onChange={(v) => patchPortas({ tipo: v })} />
                 {isBasculante && (
-                  <Segmented label="Abertura" value={config.portas.abrePara ?? 'cima'} options={ABRE_PARA} onChange={(v) => patchPortas({ abrePara: v })} />
+                  <Segmented label="Sentido de Abertura" value={config.portas.abrePara ?? 'cima'} options={ABRE_PARA} onChange={(v) => patchPortas({ abrePara: v })} />
                 )}
               </div>
-              <div className="space-y-3">
-                <div className="text-xs font-bold text-steel-400 uppercase tracking-wider">Puxadores</div>
-                <Segmented label="Tipo" value={puxador.tipo} options={PUXADORES} onChange={(v) => patch({ puxador: { ...puxador, tipo: v } })} />
+              <div className="space-y-4 bg-bg-base p-4 rounded-xl border border-border-subtle">
+                <div className="text-xs font-bold text-text-muted uppercase tracking-wider">Puxadores</div>
+                <Segmented label="Modelo" value={puxador.tipo} options={PUXADORES} onChange={(v) => patch({ puxador: { ...puxador, tipo: v } })} />
                 {puxador.tipo !== 'tip_on' && puxador.tipo !== 'usinado_45' && (
-                  <Segmented label="Cor" value={puxador.cor} options={PUXADOR_CORES} onChange={(v) => patch({ puxador: { ...puxador, cor: v } })} />
+                  <Segmented label="Cor do Puxador" value={puxador.cor} options={PUXADOR_CORES} onChange={(v) => patch({ puxador: { ...puxador, cor: v } })} />
                 )}
               </div>
               {config.gavetas.quantidade > 0 && (
-                <div className="space-y-3">
-                  <div className="text-xs font-bold text-steel-400 uppercase tracking-wider">Gavetas</div>
-                  <Segmented label="Sistema" value={config.gavetas.sistema} options={SISTEMAS_GAVETA} onChange={(v) => patchGavetas({ sistema: v })} />
+                <div className="space-y-4">
+                  <div className="text-xs font-bold text-text-muted uppercase tracking-wider">Gavetas</div>
+                  <Segmented label="Sistema de Corrediça" value={config.gavetas.sistema} options={SISTEMAS_GAVETA} onChange={(v) => patchGavetas({ sistema: v })} />
                   <Segmented
-                    label="Corrediça"
+                    label="Profundidade da Corrediça"
                     value={corredica}
                     options={CORREDICAS.map((c) => ({ value: c, label: `${c} cm` }))}
                     onChange={(v) => patch({ corredica: { ...config.corredica, medida: v } })}
                   />
                 </div>
               )}
-              <div className="space-y-3">
-                <div className="text-xs font-bold text-steel-400 uppercase tracking-wider">Estrutura</div>
-                <Segmented label="Fundo" value={config.sistemaFundo} options={SISTEMAS_FUNDO} onChange={(v) => patch({ sistemaFundo: v })} />
+              <div className="space-y-4">
+                <div className="text-xs font-bold text-text-muted uppercase tracking-wider">Estrutura Interna</div>
+                <Segmented label="Fixação do Fundo" value={config.sistemaFundo} options={SISTEMAS_FUNDO} onChange={(v) => patch({ sistemaFundo: v })} />
+                
                 <Toggle label="Rodapé" checked={config.rodape.ativo} onChange={(v) => patchRodape({ ativo: v })} />
                 {config.rodape.ativo && (
-                  <div className="grid grid-cols-2 gap-x-4 pl-3 border-l-2 border-wood-500/30">
-                    <Stepper label="Altura" value={toDisplay(config.rodape.altura, unit)} onChange={(v) => patchRodape({ altura: fromDisplay(v, unit) })} step={5} unit={unit} />
-                    <Stepper label="Recuo" value={toDisplay(config.rodape.recuo, unit)} onChange={(v) => patchRodape({ recuo: fromDisplay(v, unit) })} step={5} unit={unit} />
+                  <div className="grid grid-cols-2 gap-4 pl-3 border-l-2 border-wood-500/30">
+                    <Stepper label="Altura do Rodapé" value={toDisplay(config.rodape.altura, unit)} onChange={(v) => patchRodape({ altura: fromDisplay(v, unit) })} step={5} unit={unit} />
+                    <Stepper label="Recuo Traseiro" value={toDisplay(config.rodape.recuo, unit)} onChange={(v) => patchRodape({ recuo: fromDisplay(v, unit) })} step={5} unit={unit} />
                   </div>
                 )}
-                <Toggle label="Taponamento esq." checked={config.taponamento.esquerda.ativo} onChange={(v) => patchTapon('esquerda', { ativo: v })} />
+                
+                <Toggle label="Taponamento Esquerdo" checked={config.taponamento.esquerda.ativo} onChange={(v) => patchTapon('esquerda', { ativo: v })} />
                 {config.taponamento.esquerda.ativo && (
-                  <Stepper className="pl-3 border-l-2 border-wood-500/30" label="Avanço esq." value={toDisplay(config.taponamento.esquerda.avancao, unit)} onChange={(v) => patchTapon('esquerda', { avancao: fromDisplay(v, unit) })} step={5} unit={unit} />
+                  <Stepper className="pl-3 border-l-2 border-wood-500/30" label="Avanço Frontal (Esq.)" value={toDisplay(config.taponamento.esquerda.avancao, unit)} onChange={(v) => patchTapon('esquerda', { avancao: fromDisplay(v, unit) })} step={5} unit={unit} />
                 )}
-                <Toggle label="Taponamento dir." checked={config.taponamento.direita.ativo} onChange={(v) => patchTapon('direita', { ativo: v })} />
+                
+                <Toggle label="Taponamento Direito" checked={config.taponamento.direita.ativo} onChange={(v) => patchTapon('direita', { ativo: v })} />
                 {config.taponamento.direita.ativo && (
-                  <Stepper className="pl-3 border-l-2 border-wood-500/30" label="Avanço dir." value={toDisplay(config.taponamento.direita.avancao, unit)} onChange={(v) => patchTapon('direita', { avancao: fromDisplay(v, unit) })} step={5} unit={unit} />
+                  <Stepper className="pl-3 border-l-2 border-wood-500/30" label="Avanço Frontal (Dir.)" value={toDisplay(config.taponamento.direita.avancao, unit)} onChange={(v) => patchTapon('direita', { avancao: fromDisplay(v, unit) })} step={5} unit={unit} />
                 )}
-                <Stepper label="Pingadeira frente" value={toDisplay(config.tampo.pingadeiraFrente, unit)} onChange={(v) => patchTampo({ pingadeiraFrente: fromDisplay(v, unit) })} step={5} unit={unit} />
-                <Stepper label="Pingadeira lados" value={toDisplay(config.tampo.pingadeiraLados, unit)} onChange={(v) => patchTampo({ pingadeiraLados: fromDisplay(v, unit) })} step={5} unit={unit} />
+                
+                {config.moduloTipo === 'balcao' && (
+                  <div className="grid grid-cols-2 gap-4 pt-3 border-t border-steel-800">
+                    <Stepper label="Pingadeira Frente" value={toDisplay(config.tampo.pingadeiraFrente, unit)} onChange={(v) => patchTampo({ pingadeiraFrente: fromDisplay(v, unit) })} step={5} unit={unit} />
+                    <Stepper label="Pingadeira Lados" value={toDisplay(config.tampo.pingadeiraLados, unit)} onChange={(v) => patchTampo({ pingadeiraLados: fromDisplay(v, unit) })} step={5} unit={unit} />
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           {activeTab === 'pecas' && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-bold text-steel-400 uppercase tracking-wider">Lista de Peças</div>
-                <span className="text-xs text-steel-500 font-mono bg-steel-800/60 px-2 py-0.5 rounded-full">{result.pieces.length} itens</span>
+              <div className="flex items-center justify-between pb-2 border-b border-steel-800">
+                <div className="text-xs font-bold text-text-muted uppercase tracking-wider">Lista de Corte (Otimizada)</div>
+                <span className="text-xs text-wood-600 dark:text-wood-300 font-mono bg-wood-50 dark:bg-wood-500/20 px-2 py-0.5 rounded-full">{result.pieces.length} peças</span>
               </div>
               {result.pieces.map((p, idx) => (
-                <div key={p.id || idx} className="rounded-xl border border-steel-800 bg-steel-800/30 px-3 py-2.5">
+                <div key={p.id || idx} className="rounded-xl border border-border-subtle bg-bg-base hover:bg-bg-panel-hover transition-colors px-3 py-2.5">
                   <div className="flex items-start justify-between gap-2">
-                    <span className="text-sm font-semibold text-steel-100 leading-tight">{p.name}</span>
-                    <span className="shrink-0 text-[11px] font-mono text-wood-400 bg-wood-500/10 px-1.5 py-0.5 rounded">{p.w}×{p.h}×{p.d}</span>
+                    <span className="text-sm font-semibold text-text-base leading-tight">{p.name}</span>
+                    <span className="shrink-0 text-[11px] font-mono text-text-muted bg-bg-panel-hover px-1.5 py-0.5 rounded border border-border-strong">{p.w}×{p.h}×{p.d}</span>
                   </div>
-                  <div className="text-[11px] text-steel-500 mt-1">{p.materialId}</div>
-                  <div className="flex gap-1 mt-1.5 flex-wrap">
-                    {p.edgeBanding.top && <span className="px-1.5 py-0.5 rounded bg-steel-700/60 text-[9px] font-bold text-steel-300">Topo</span>}
-                    {p.edgeBanding.bottom && <span className="px-1.5 py-0.5 rounded bg-steel-700/60 text-[9px] font-bold text-steel-300">Base</span>}
-                    {p.edgeBanding.left && <span className="px-1.5 py-0.5 rounded bg-steel-700/60 text-[9px] font-bold text-steel-300">Esq</span>}
-                    {p.edgeBanding.right && <span className="px-1.5 py-0.5 rounded bg-steel-700/60 text-[9px] font-bold text-steel-300">Dir</span>}
+                  <div className="text-[11px] text-text-muted mt-1">{p.materialId}</div>
+                  <div className="flex gap-1.5 mt-2 flex-wrap">
+                    {p.edgeBanding.top && <span className="px-1.5 py-0.5 rounded bg-wood-500/20 border border-wood-500/30 text-[9px] font-bold text-wood-300 uppercase tracking-wider">Topo</span>}
+                    {p.edgeBanding.bottom && <span className="px-1.5 py-0.5 rounded bg-wood-500/20 border border-wood-500/30 text-[9px] font-bold text-wood-300 uppercase tracking-wider">Base</span>}
+                    {p.edgeBanding.left && <span className="px-1.5 py-0.5 rounded bg-wood-500/20 border border-wood-500/30 text-[9px] font-bold text-wood-300 uppercase tracking-wider">Esq</span>}
+                    {p.edgeBanding.right && <span className="px-1.5 py-0.5 rounded bg-wood-500/20 border border-wood-500/30 text-[9px] font-bold text-wood-300 uppercase tracking-wider">Dir</span>}
                   </div>
                 </div>
               ))}
             </div>
           )}
-
         </div>
-      </div>
 
-      {/* ── CTA fixo no rodapé ── */}
-      <div
-        className="fixed left-0 right-0 bottom-0 bg-steel-950/98 border-t border-steel-800 px-4 z-30 flex items-center gap-3"
-        style={{ height: ctaH, paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      >
-        <div className="min-w-0 shrink-0">
-          <div className="text-[9px] text-steel-500 font-bold uppercase tracking-wider">Estimativa</div>
-          <div className="text-base font-mono font-bold text-wood-400 tabular-nums leading-tight">
-            {budget ? budget.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}
-          </div>
+        {/* ── Fixed Footer CTA ── */}
+        <div className="p-4 border-t border-border-subtle bg-bg-panel shrink-0 flex items-center gap-4 shadow-[0_-4px_12px_-2px_rgba(0,0,0,0.08)]">
+          {budget && (
+            <div className="min-w-0 shrink-0">
+              <div className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Custo de Produção</div>
+              <div className="text-lg font-mono font-bold text-wood-400 tabular-nums leading-tight">
+                {budget.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </div>
+            </div>
+          )}
+          {onConfirm && (
+            <button
+              type="button"
+              onClick={onConfirm}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-wood-500 hover:bg-wood-600 text-white font-bold py-3 text-sm active:scale-[0.98] transition-all shadow-lg shadow-wood-500/20 ml-auto"
+            >
+              <Check size={18} />
+              <span>{confirmLabel}</span>
+            </button>
+          )}
         </div>
-        {onConfirm && (
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-wood-500 hover:bg-wood-600 text-white font-bold py-3 text-sm active:scale-[0.98] transition-all shadow-xl shadow-wood-500/20"
-          >
-            <Check size={17} />
-            <span>{confirmLabel}</span>
-          </button>
-        )}
-      </div>
 
+      </div>
     </div>
   )
 }
@@ -520,33 +499,31 @@ interface ColorPickerProps {
 function ColorPicker({ label, value, onChange }: ColorPickerProps) {
   return (
     <div>
-      <div className="text-xs font-semibold text-steel-400 mb-2">{label}</div>
-      <div className="flex flex-wrap gap-2.5">
+      <div className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">{label}</div>
+      <div className="flex flex-wrap gap-3">
         {COLOR_SWATCHES.map((s) => (
           <button
             key={s.id}
             type="button"
             title={s.label}
             onClick={() => onChange(s.id)}
-            className={`relative w-10 h-10 rounded-full border-2 transition-all active:scale-90 flex-shrink-0 ${
-              value === s.id ? 'border-wood-400 scale-110 shadow-lg shadow-wood-500/20' : 'border-steel-700'
+            className={`relative w-11 h-11 rounded-xl transition-all active:scale-90 flex-shrink-0 ${
+              value === s.id ? 'scale-110 shadow-lg shadow-wood-500/30 ring-2 ring-wood-400 ring-offset-2 ring-offset-steel-900' : 'border border-steel-700 hover:border-steel-500'
             }`}
             style={{ background: s.color }}
             aria-label={s.label}
           >
             {value === s.id && (
               <span className="absolute inset-0 flex items-center justify-center">
-                <Check size={14} className={s.color === '#f5f0e8' || s.color === '#d4aa7d' ? 'text-steel-700' : 'text-white'} />
+                <Check size={16} className={s.color === '#f5f0e8' || s.color === '#d4aa7d' || s.color === '#e6e4df' ? 'text-steel-800' : 'text-white'} />
               </span>
             )}
           </button>
         ))}
       </div>
-      <div className="text-[11px] text-steel-500 mt-1.5">
-        {COLOR_SWATCHES.find((s) => s.id === value)?.label ?? 'Padrão'}
+      <div className="text-xs text-text-muted font-medium mt-2 bg-bg-panel-hover px-2 py-1 inline-block rounded-md">
+        {COLOR_SWATCHES.find((s) => s.id === value)?.label ?? 'Material Padrão'}
       </div>
     </div>
   )
 }
-
-
