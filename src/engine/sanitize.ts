@@ -77,7 +77,11 @@ export function sanitizeModule(cfg: ModuloConfig): ModuloConfig {
       ? cfg.moduloTipo
       : cfg.moduloTipo === 'gaveteiro'
         ? ('gaveteiro' as const)
-        : ('balcao' as const),
+        : cfg.moduloTipo === 'home'
+          ? ('home' as const)
+          : cfg.moduloTipo === 'pia'
+            ? ('pia' as const)
+            : ('balcao' as const),
     largura,
     altura,
     profundidade,

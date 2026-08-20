@@ -1,4 +1,4 @@
-﻿// Motor paramétrico — função pura (Seção 9).
+// Motor paramétrico — função pura (Seção 9).
 // Recebe a config do módulo e as regras resolvidas; devolve a lista de peças
 // com dimensão/posição final + dobradiças + avisos. Não depende de 3D.
 
@@ -9,6 +9,7 @@ import { computeBalcao } from './modules/balcao'
 import { computeGaveteiro } from './modules/gaveteiro'
 import { computeArmario } from './modules/armario'
 import { computeHome } from './modules/home'
+import { computePia } from './modules/pia'
 import type { Hinge, ModuloConfig, ModuleResult, Piece, Piston, SistemaFundo } from './types'
 
 const AREAS_MOLHADAS = new Set(['banheiro', 'area_servico'])
@@ -45,6 +46,9 @@ export function computeModule(config: ModuloConfig, rules: EngineRules): ModuleR
     pieces = r.pieces
     hinges = r.hinges
     pistons = r.pistons
+  } else if (cfg.moduloTipo === 'pia') {
+    const r = computePia(cfg, rules)
+    pieces = r.pieces
   } else if (TIPOS_CAIXARIA.includes(cfg.moduloTipo)) {
     const r = computeArmario(cfg, rules)
     pieces = r.pieces

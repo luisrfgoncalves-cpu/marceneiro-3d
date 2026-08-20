@@ -75,6 +75,15 @@ const PUXADOR_CORES: Array<{ value: PuxadorCor; label: string }> = [
 
 const CORREDICAS = [30, 35, 40, 45, 50, 55, 60]
 
+const STONE_PEDRAS: Array<{ value: 'granito' | 'marmore' | 'quartzito' | 'silestone' | 'porcelana'; label: string }> = [
+  { value: 'granito', label: 'Granito Preto' },
+  { value: 'marmore', label: 'Mármore Carrara' },
+  { value: 'quartzito', label: 'Quartzito' },
+  { value: 'silestone', label: 'Silestone Cinza' },
+  { value: 'porcelana', label: 'Porcelana Beton' },
+]
+
+
 const FITAS: Array<{ value: string; label: string }> = [
   { value: 'fita_proadec_22mm_maderado_x', label: '22mm Maderado' },
   { value: 'fita_proadec_22mm_branco_tx', label: '22mm Branco TX' },
@@ -103,6 +112,7 @@ export function ModuleAdjuster({ config, onChange, rules, onBack, onConfirm, con
   const budget = useMemo(() => (catalog ? estimateCost(config, result, catalog) : null), [catalog, config, result])
 
   const patch = (p: Partial<ModuloConfig>) => onChange({ ...config, ...p })
+  const patchPia = (p: Partial<NonNullable<ModuloConfig['pia']>>) => onChange({ ...config, pia: { ...config.pia, ...p } as any })
   const patchPortas = (p: Partial<ModuloConfig['portas']>) => onChange({ ...config, portas: { ...config.portas, ...p } })
   const patchGavetas = (p: Partial<ModuloConfig['gavetas']>) => onChange({ ...config, gavetas: { ...config.gavetas, ...p } })
   const patchTampo = (p: Partial<ModuloConfig['tampo']>) => onChange({ ...config, tampo: { ...config.tampo, ...p } })
@@ -275,6 +285,82 @@ export function ModuleAdjuster({ config, onChange, rules, onBack, onConfirm, con
                 <Stepper label="Prateleiras" value={config.prateleiras.quantidade} onChange={(v) => patch({ prateleiras: { ...config.prateleiras, quantidade: v } })} min={0} max={8} step={1} unit="un" />
               </div>
               <Segmented label="Ambiente" value={config.ambiente} options={AMBIENTES} onChange={(v) => patch({ ambiente: v })} />
+              {config.moduloTipo === 'pia' && (
+                <div className="space-y-3 pt-3 border-t border-steel-800">
+                  <div className="text-xs font-bold text-wood-400 uppercase tracking-wider">Acessórios da Pia</div>
+                  
+                  {/* Cuba Toggle */}
+                  <Toggle
+                    label="Cuba Embutida"
+                    checked={!!config.pia?.cuba}
+                    onChange={(checked) => {
+                      if (checked) {
+                        patchPia({
+                          cuba: { largura: 560, profundidade: 430, posX: 100, quantidade: 1 }
+                        })
+                      } else {
+                        // Remove cuba
+                        const copy = { ...config }
+                        if (copy.pia) {
+                          const { cuba, ...rest } = copy.pia
+                          onChange({ ...copy, pia: rest as any })
+                        }
+                      }
+                    }}
+                  />
+                  {config.pia?.cuba && (
+                    <div className="space-y-2 pl-3 border-l-2 border-wood-500/30">
+                      <Stepper
+                        label="Largura Cuba"
+                        value={toDisplay(config.pia.cuba.largura, unit)}
+                        onChange={(v) => patchPia({ cuba: { ...config.pia!.cuba!, largura: fromDisplay(v, unit) } })}
+                        step={unit === 'cm' ? 1 : 10}
+                        unit={unit}
+                      />
+                      <Stepper
+                        label="Qtd Cubas"
+                        value={config.pia.cuba.quantidade ?? 1}
+                        onChange={(v) => patchPia({ cuba: { ...config.pia!.cuba!, quantidade: v } })}
+                        min={1}
+                        max={2}
+                        step={1}
+                        unit="un"
+                      />
+                    </div>
+                  )}
+
+                  {/* Cooktop Toggle */}
+                  <Toggle
+                    label="Recorte Cooktop"
+                    checked={!!config.pia?.cooktop}
+                    onChange={(checked) => {
+                      if (checked) {
+                        patchPia({
+                          cooktop: { largura: 560, profundidade: 480, posX: 1000 }
+                        })
+                      } else {
+                        const copy = { ...config }
+                        if (copy.pia) {
+                          const { cooktop, ...rest } = copy.pia
+                          onChange({ ...copy, pia: rest as any })
+                        }
+                      }
+                    }}
+                  />
+                  {config.pia?.cooktop && (
+                    <div className="space-y-2 pl-3 border-l-2 border-wood-500/30">
+                      <Stepper
+                        label="Largura Cooktop"
+                        value={toDisplay(config.pia.cooktop.largura, unit)}
+                        onChange={(v) => patchPia({ cooktop: { ...config.pia!.cooktop!, largura: fromDisplay(v, unit) } })}
+                        step={unit === 'cm' ? 1 : 10}
+                        unit={unit}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
             </div>
           )}
 
@@ -282,6 +368,28 @@ export function ModuleAdjuster({ config, onChange, rules, onBack, onConfirm, con
             <div className="space-y-4">
               <ColorPicker label="MDF Interno" value={config.materialInterno} onChange={(id) => patch({ materialInterno: id })} />
               <ColorPicker label="MDF Externo / Frentes" value={config.materialExterno} onChange={(id) => patch({ materialExterno: id })} />
+              {config.moduloTipo === 'pia' && (
+                <div className="space-y-3 pt-2 border-t border-steel-800">
+                  <div className="text-xs font-bold text-wood-400 uppercase tracking-wider">Tampo de Pedra</div>
+                  <Segmented
+                    label="Material da Pedra"
+                    value={config.pia?.materialPedra ?? 'granito'}
+                    options={STONE_PEDRAS}
+                    onChange={(v) => patchPia({ materialPedra: v as any })}
+                  />
+                  <Segmented
+                    label="Espessura da Pedra"
+                    value={config.pia?.espessuraPedra ?? 30}
+                    options={[
+                      { value: 20, label: '20 mm' },
+                      { value: 30, label: '30 mm' },
+                      { value: 60, label: '60 mm (Meia Esquadria)' }
+                    ]}
+                    onChange={(v) => patchPia({ espessuraPedra: v })}
+                  />
+                </div>
+              )}
+
               <Segmented
                 label="Sentido do Veio"
                 value={config.veioGlobal ?? 'vertical'}

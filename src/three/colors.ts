@@ -10,6 +10,12 @@ export const MATERIAL_COLORS: Record<string, string> = {
   mdf_cinza_18mm: '#546e7a', // Cinza Sagrado (Guararapes) - Cinza grafite fosco sofisticado
   mdf_preto_18mm: '#212121', // Preto Carbono (Duratex) - Preto absoluto matte
   mdf_louro_freijo_18mm: '#ac8152', // Louro Freijó (Arauco) - Madeirado freijó clássico
+  // Pedras naturais — cores realistas para tampos de cozinha
+  pedra_granito_nero_absolute: '#1a1a1a',       // Granito Preto Absoluto
+  pedra_marmore_bianco_carrara: '#f0ede8',       // Mármore Branco Carrara
+  pedra_quartzito_arabescato: '#e8d9c4',         // Quartzito Arabescato bege
+  pedra_silestone_cinza_expo: '#6b7280',         // Silestone Cinza Expo
+  pedra_porcelana_beton_light: '#c4bfb5',        // Porcelana Beton Light
   mdf_areia_18mm: '#e5ded4', // Areia Cores (Guararapes) - Areia clássico
 }
 

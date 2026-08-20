@@ -92,6 +92,33 @@ interface PieceProps {
 export function SinglePiece({ piece, onClick }: PieceProps) {
   const color = materialColor(piece.materialId)
   const matProps = useMemo(() => getMaterial(piece.materialId, color, piece.grainDirection), [piece.materialId, color, piece.grainDirection])
+  const isStone = piece.materialId.startsWith('pedra_')
+  const geometry = useMemo(() => {
+    const baseGeo = new THREE.BoxGeometry(piece.w * MM, piece.h * MM, piece.d * MM)
+    if (!piece.cutouts || piece.cutouts.length === 0) return baseGeo
+
+    try {
+      const evaluator = new Evaluator()
+      let brushBase = new Brush(baseGeo)
+
+      piece.cutouts.forEach((cut) => {
+        const cutGeo = new THREE.BoxGeometry(cut.w * MM, (piece.h + 20) * MM, cut.d * MM)
+        const brushCut = new Brush(cutGeo)
+        // Position relative to center of the piece
+        const rx = (cut.position.x + cut.w / 2) * MM - (piece.w / 2) * MM
+        const ry = 0
+        const rz = (cut.position.z + cut.d / 2) * MM - (piece.d / 2) * MM
+        brushCut.position.set(rx, ry, rz)
+        brushCut.updateMatrixWorld()
+
+        brushBase = evaluator.evaluate(brushBase, brushCut, SUBTRACTION)
+      })
+      return brushBase.geometry
+    } catch (err) {
+      console.error('CSG error:', err)
+      return baseGeo
+    }
+  }, [piece.w, piece.h, piece.d, piece.cutouts])
   
   const edgeBanding = piece.edgeBanding ?? { top: false, bottom: false, left: false, right: false }
 
@@ -106,12 +133,12 @@ export function SinglePiece({ piece, onClick }: PieceProps) {
       castShadow
       receiveShadow
     >
-      <boxGeometry args={[piece.w * MM, piece.h * MM, piece.d * MM]} />
+      <primitive object={geometry} />
       {/* 6 faces: right (+X), left (-X), top (+Y), bottom (-Y), front (+Z), back (-Z) */}
-      <meshStandardMaterial attach="material-0" color={edgeBanding.right ? color : MDF_CORE_MAT.color} roughness={edgeBanding.right ? matProps.roughness : MDF_CORE_MAT.roughness} metalness={edgeBanding.right ? matProps.metalness : MDF_CORE_MAT.metalness} map={edgeBanding.right ? matProps.map : null} />
-      <meshStandardMaterial attach="material-1" color={edgeBanding.left ? color : MDF_CORE_MAT.color} roughness={edgeBanding.left ? matProps.roughness : MDF_CORE_MAT.roughness} metalness={edgeBanding.left ? matProps.metalness : MDF_CORE_MAT.metalness} map={edgeBanding.left ? matProps.map : null} />
-      <meshStandardMaterial attach="material-2" color={edgeBanding.top ? color : MDF_CORE_MAT.color} roughness={edgeBanding.top ? matProps.roughness : MDF_CORE_MAT.roughness} metalness={edgeBanding.top ? matProps.metalness : MDF_CORE_MAT.metalness} map={edgeBanding.top ? matProps.map : null} />
-      <meshStandardMaterial attach="material-3" color={edgeBanding.bottom ? color : MDF_CORE_MAT.color} roughness={edgeBanding.bottom ? matProps.roughness : MDF_CORE_MAT.roughness} metalness={edgeBanding.bottom ? matProps.metalness : MDF_CORE_MAT.metalness} map={edgeBanding.bottom ? matProps.map : null} />
+      <meshStandardMaterial attach="material-0" color={isStone || edgeBanding.right ? color : MDF_CORE_MAT.color} roughness={isStone || edgeBanding.right ? matProps.roughness : MDF_CORE_MAT.roughness} metalness={isStone || edgeBanding.right ? matProps.metalness : MDF_CORE_MAT.metalness} map={isStone || edgeBanding.right ? matProps.map : null} />
+      <meshStandardMaterial attach="material-1" color={isStone || edgeBanding.left ? color : MDF_CORE_MAT.color} roughness={isStone || edgeBanding.left ? matProps.roughness : MDF_CORE_MAT.roughness} metalness={isStone || edgeBanding.left ? matProps.metalness : MDF_CORE_MAT.metalness} map={isStone || edgeBanding.left ? matProps.map : null} />
+      <meshStandardMaterial attach="material-2" color={isStone || edgeBanding.top ? color : MDF_CORE_MAT.color} roughness={isStone || edgeBanding.top ? matProps.roughness : MDF_CORE_MAT.roughness} metalness={isStone || edgeBanding.top ? matProps.metalness : MDF_CORE_MAT.metalness} map={isStone || edgeBanding.top ? matProps.map : null} />
+      <meshStandardMaterial attach="material-3" color={isStone || edgeBanding.bottom ? color : MDF_CORE_MAT.color} roughness={isStone || edgeBanding.bottom ? matProps.roughness : MDF_CORE_MAT.roughness} metalness={isStone || edgeBanding.bottom ? matProps.metalness : MDF_CORE_MAT.metalness} map={isStone || edgeBanding.bottom ? matProps.map : null} />
       <meshStandardMaterial attach="material-4" color={color} roughness={matProps.roughness} metalness={matProps.metalness} map={matProps.map} />
       <meshStandardMaterial attach="material-5" color={color} roughness={matProps.roughness} metalness={matProps.metalness} map={matProps.map} />
     </mesh>

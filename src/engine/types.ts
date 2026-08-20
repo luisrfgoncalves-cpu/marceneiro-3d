@@ -91,7 +91,7 @@ export type TipoPorta = 'solteira' | 'casal' | 'basculante'
 
 export type PortaAbrePara = 'cima' | 'baixo'
 
-export type ModuloTipo = 'balcao' | 'gaveteiro' | 'aereo' | 'torre' | 'armario' | 'guarda_roupa' | 'home'
+export type ModuloTipo = 'balcao' | 'gaveteiro' | 'aereo' | 'torre' | 'armario' | 'guarda_roupa' | 'home' | 'pia'
 
 export type PuxadorTipo =
   | 'perfil_gola_anodizado'
@@ -191,5 +191,13 @@ export interface ModuloConfig {
   // Sentido do veio global -- quando definido, sobrescreve o padrao do motor nas pecas estruturais
   veioGlobal?: GrainDirection
   sapateiras: { quantidade: number }
+  pia?: {
+    materialPedra: 'granito' | 'marmore' | 'quartzito' | 'silestone' | 'porcelana'
+    espessuraPedra: number
+    cuba?: { largura: number; profundidade: number; posX: number; quantidade: number }
+    cooktop?: { largura: number; profundidade: number; posX: number }
+    torneira?: { posX: number }
+    areaSeca?: { largura: number }
+  }
 }
 

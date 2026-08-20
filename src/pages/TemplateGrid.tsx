@@ -2,6 +2,7 @@
 // tela em branco. Tocar num card abre o módulo já montado na tela de ajuste.
 // Atualizado com renders isométricos 3D com luz, sombras e texturas de madeira realistas.
 
+import { useState, useEffect } from 'react'
 import type { ModuloConfig } from '../engine/types'
 import { MODULE_TEMPLATES, type ModuleTemplate } from '../engine/templates'
 import { materialColor } from '../three/colors'
@@ -13,6 +14,41 @@ interface TemplateGridProps {
 }
 
 export function TemplateGrid({ onSelect, onBack, backLabel = 'Início' }: TemplateGridProps) {
+  // Load personal templates from localStorage (sorted by uso, most used first)
+  const [personalTemplates, setPersonalTemplates] = useState<Array<{
+    id: string
+    nome: string
+    config: ModuloConfig
+    uso: number
+  }>>([])
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('marceneiro3d_personal_templates')
+      if (raw) {
+        const all = JSON.parse(raw) as Array<{ id: string; nome: string; config: ModuloConfig; uso?: number }>
+        const sorted = all.sort((a, b) => (b.uso ?? 0) - (a.uso ?? 0))
+        setPersonalTemplates(sorted as any)
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  const handleSelectPersonal = (tpl: typeof personalTemplates[number]) => {
+    // Increment uso
+    try {
+      const raw = localStorage.getItem('marceneiro3d_personal_templates')
+      if (raw) {
+        const all = JSON.parse(raw) as Array<{ id: string; nome: string; config: ModuloConfig; uso?: number }>
+        const updated = all.map((t) => t.id === tpl.id ? { ...t, uso: (t.uso ?? 0) + 1 } : t)
+        localStorage.setItem('marceneiro3d_personal_templates', JSON.stringify(updated))
+      }
+    } catch {
+      // ignore
+    }
+    onSelect({ id: tpl.id, nome: tpl.nome, descricao: 'Template pessoal', cria: () => tpl.config }, tpl.config)
+  }
   return (
     <div className="max-w-3xl mx-auto px-4 pt-6 pb-16">
       <header className="mb-6">
@@ -24,6 +60,43 @@ export function TemplateGrid({ onSelect, onBack, backLabel = 'Início' }: Templa
           Escolha um modelo pronto e ajuste — nunca comece do zero.
         </p>
       </header>
+
+      {personalTemplates.length > 0 && (
+        <>
+          <div className="mb-3 mt-2">
+            <div className="text-xs font-bold text-wood-400 uppercase tracking-wider">Meus templates</div>
+          </div>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            {personalTemplates.map((tpl) => (
+              <button
+                key={tpl.id}
+                type="button"
+                onClick={() => handleSelectPersonal(tpl)}
+                className="group text-left rounded-2xl border border-wood-500/30 bg-wood-500/5 overflow-hidden active:scale-[0.98] transition-all hover:border-wood-400/60 shadow-md"
+              >
+                <div className="h-28 flex items-center justify-center border-b border-wood-500/20 bg-gradient-to-b from-wood-950/60 to-steel-950 relative">
+                  <div className="text-2xl opacity-50">📐</div>
+                  {tpl.uso > 0 && (
+                    <div className="absolute top-2 right-2 bg-wood-500/20 text-wood-400 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                      ×{tpl.uso}
+                    </div>
+                  )}
+                </div>
+                <div className="p-3.5">
+                  <div className="text-sm font-bold text-steel-100 group-hover:text-wood-400 transition-colors truncate">{tpl.nome}</div>
+                  <div className="text-[10px] text-steel-500 mt-1 font-mono">
+                    {tpl.config.largura / 10}×{tpl.config.altura / 10}×{tpl.config.profundidade / 10} cm
+                  </div>
+                  <div className="text-[9px] text-wood-500 mt-1 uppercase font-bold tracking-wider">Meu padrão</div>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="mb-3">
+            <div className="text-xs font-bold text-steel-400 uppercase tracking-wider">Módulos do sistema</div>
+          </div>
+        </>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         {MODULE_TEMPLATES.map((t) => {
@@ -218,6 +291,25 @@ function PreviewChip({ templateId, color }: { templateId: string; color: string 
           <path d="M 84 33 L 84 53" stroke={handleColor} strokeWidth="1.5" />
         </svg>
       )
+    case 'pia_pedra':
+      return (
+        <svg viewBox="0 0 120 100" className="w-full h-full">
+          <ellipse cx="60" cy="85" rx="42" ry="7" fill={shadow} opacity="0.6" filter="blur(3px)" />
+          {/* Caixa de balcão de madeira abaixo */}
+          <path d="M 20 45 L 20 75 L 50 83 L 50 53 Z" fill={woodDark} />
+          <path d="M 50 53 L 50 83 L 100 68 L 100 38 Z" fill={woodLight} />
+          
+          {/* Tampo de Pedra (Granito Cinza/Preto) */}
+          <path d="M 18 42 L 48 50 L 102 34 L 72 26 Z" fill="#2c2c2c" />
+          <path d="M 18 42 L 18 45 L 48 53 L 48 50 Z" fill="#1f1f1f" />
+          <path d="M 48 50 L 48 53 L 102 37 L 102 34 Z" fill="#1f1f1f" />
+
+          {/* Recorte da Cuba com preenchimento cinza metálico */}
+          <path d="M 40 40 L 52 44 L 75 37 L 63 33 Z" fill="#555" />
+          <path d="M 43 41 L 51 43 L 72 37 L 64 34 Z" fill="#888" />
+        </svg>
+      )
+
     case 'home_rack':
       return (
         <svg viewBox="0 0 120 100" className="w-full h-full">

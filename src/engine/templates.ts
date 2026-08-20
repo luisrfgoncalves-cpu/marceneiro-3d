@@ -176,6 +176,41 @@ export function homeRack(overrides: Partial<ModuloConfig> = {}): ModuloConfig {
   }
 }
 
+
+export function piaPedra(overrides: Partial<ModuloConfig> = {}): ModuloConfig {
+  return {
+    moduloTipo: 'pia',
+    ambiente: 'cozinha',
+    nome: 'Pia de pedra',
+    largura: 1800,
+    altura: 850,
+    profundidade: 600,
+    espessuraCaixa: 18,
+    materialInterno: MDF_BRANCO_15,
+    materialExterno: MDF_MADERADO_18,
+    fitaBorda: FITA_MADERADO,
+    portas: { quantidade: 2, tipo: 'solteira', dobradicasPorPorta: 2, espessura: 18 },
+    gavetas: { quantidade: 0, sistema: 'telescopica', espessura: 15 },
+    sistemaFundo: 'sem_fundo',
+    taponamento: {
+      esquerda: { ativo: false, avancao: 20, espessura: 18 },
+      direita: { ativo: false, avancao: 20, espessura: 18 },
+    },
+    rodape: { ativo: true, altura: 100, recuo: 50, material: 'pedra' },
+    tampo: { espessura: 30, pingadeiraFrente: 20, pingadeiraLados: 0, material: 'pedra' },
+    montantes: { ativo: false, deitado: true, largura: 50, espessura: 18 },
+    orelhinha: { ativo: false, largura: 30 },
+    prateleiras: { quantidade: 0, espessura: 15 },
+    sapateiras: { quantidade: 0 },
+    pia: {
+      materialPedra: 'granito',
+      espessuraPedra: 30,
+      cuba: { largura: 560, profundidade: 430, posX: 100, quantidade: 1 },
+    },
+    ...overrides,
+  }
+}
+
 export interface ModuleTemplate {
   id: string
   nome: string
@@ -192,4 +227,5 @@ export const MODULE_TEMPLATES: ModuleTemplate[] = [
   { id: 'torre', nome: 'Torre', descricao: 'Módulo alto com prateleiras', cria: torre },
   { id: 'guarda_roupa_4p', nome: 'Guarda-roupa 4 portas', descricao: 'Grande com portas casal', cria: guardaRoupa4Portas },
   { id: 'home_rack', nome: 'Home / Rack', descricao: 'Módulo para sala com configuração livre', cria: homeRack },
+  { id: 'pia_pedra', nome: 'Pia de pedra', descricao: 'Bancada com tampo em granito/mármore e cuba embutida', cria: piaPedra },
 ]
