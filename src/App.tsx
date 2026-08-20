@@ -1,5 +1,5 @@
-// Shell do app — navegação por estado (padrão do projeto irmão corte-sobmedida).
-// Fluxo completo (Seção 11.4): Início → Novo projeto (11.4 passos 1-2) →
+﻿// Shell do app — navegação por estado (padrão do projeto irmão corte-sobmedida).
+// Fluxo completo (Seção 11.4): Onboarding → Início → Novo projeto (11.4 passos 1-2) →
 // Ambiente (11.7) → Biblioteca de módulos (11.2) → Ajuste com 3D ao vivo (11.3/11.5).
 
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
@@ -11,6 +11,7 @@ import { PriceStore, type PriceCatalog } from './lib/prices'
 import { defaultCatalog } from './engine/cost'
 import { Persistence } from './lib/persistence'
 import type { DbCliente } from './lib/db'
+import { Onboarding } from './pages/Onboarding'
 import { Home } from './pages/Home'
 import { NewProject, type NewProjectData } from './pages/NewProject'
 import { TemplateGrid } from './pages/TemplateGrid'
@@ -22,7 +23,7 @@ const ModuleAdjuster = lazy(() =>
 )
 const Environment = lazy(() => import('./pages/Environment').then((m) => ({ default: m.Environment })))
 
-type Screen = 'home' | 'new_project' | 'environment' | 'grid' | 'adjuster'
+type Screen = 'onboarding' | 'home' | 'new_project' | 'environment' | 'grid' | 'adjuster'
 type GridMode = 'add' | 'edit'
 
 export default function App() {
@@ -32,7 +33,11 @@ export default function App() {
 
   const [rules, setRules] = useState<EngineRules>(DEFAULT_RULES)
   const [catalog, setCatalog] = useState<PriceCatalog | null>(null)
-  const [screen, setScreen] = useState<Screen>('home')
+
+  // Onboarding: se o marceneiro já viu, vai direto para home
+  const alreadyOnboarded = typeof localStorage !== 'undefined' && localStorage.getItem('marceneiro3d_onboarding_done') === 'true'
+  const [screen, setScreen] = useState<Screen>(alreadyOnboarded ? 'home' : 'onboarding')
+
   const [projects, setProjects] = useState<EnvironmentProject[]>([])
   const [clients, setClients] = useState<DbCliente[]>([])
   const [current, setCurrent] = useState<EnvironmentProject | null>(null)
@@ -113,6 +118,10 @@ export default function App() {
     if (current?.id === id) setCurrent(null)
   }
 
+  if (screen === 'onboarding') {
+    return <Onboarding onComplete={() => setScreen('home')} />
+  }
+
   if (screen === 'new_project') {
     return <NewProject clients={clients} onBack={() => setScreen('home')} onCreate={handleCreate} />
   }
@@ -183,6 +192,11 @@ export default function App() {
           setCurrent(updated)
           setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
         }}
+        onDuplicateModule={(mod) => {
+          const updated = { ...current, modulos: [...current.modulos, mod] }
+          setCurrent(updated)
+          setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+        }}
         onToggleStatus={() => {
           const updated: EnvironmentProject = {
             ...current,
@@ -206,3 +220,4 @@ export default function App() {
     />
   )
 }
+

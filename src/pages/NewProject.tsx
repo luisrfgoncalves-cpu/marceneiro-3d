@@ -1,23 +1,15 @@
-// Novo projeto — dados do cliente + ambiente (Seção 11.4 passos 1-2).
+﻿// Cadastro e criação de novos projetos (Seção 11.4 passos 1-2).
+// Substituído emojis infantis por SVGs profissionais linha fina minimalistas.
 
-import { useMemo, useState } from 'react'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { useState } from 'react'
 import type { DbCliente } from '../lib/db'
 import type { Ambiente } from '../engine/types'
 
-const AMBIENTES: Array<{ id: Ambiente; nome: string; icone: string }> = [
-  { id: 'cozinha', nome: 'Cozinha', icone: '🍳' },
-  { id: 'dormitorio', nome: 'Dormitório', icone: '🛏️' },
-  { id: 'banheiro', nome: 'Banheiro', icone: '🚿' },
-  { id: 'area_servico', nome: 'Área de serviço', icone: '🧺' },
-  { id: 'sala', nome: 'Sala', icone: '🛋️' },
-]
-
 export interface NewProjectData {
   nome: string
-  cliente: string
-  clienteId: string | null
   ambiente: Ambiente
+  cliente: string
+  clienteId?: string
 }
 
 interface NewProjectProps {
@@ -26,119 +18,187 @@ interface NewProjectProps {
   onCreate: (data: NewProjectData) => void
 }
 
+const AMBIENTES: Array<{ value: Ambiente; label: string; icon: React.ReactNode }> = [
+  {
+    value: 'cozinha',
+    label: 'Cozinha',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-6 h-6">
+        {/* Bancada / Fogão/ Forno */}
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <line x1="3" y1="9" x2="21" y2="9" />
+        <circle cx="8" cy="6" r="1.5" />
+        <circle cx="16" cy="6" r="1.5" />
+        <circle cx="8" cy="14" r="1" />
+        <circle cx="16" cy="14" r="1" />
+      </svg>
+    ),
+  },
+  {
+    value: 'dormitorio',
+    label: 'Dormitório',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-6 h-6">
+        {/* Cama Premium */}
+        <path d="M2 4v16M2 11h20M2 17h20M22 8v12" strokeLinecap="round" />
+        <path d="M6 11V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3" />
+      </svg>
+    ),
+  },
+  {
+    value: 'banheiro',
+    label: 'Banheiro',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-6 h-6">
+        {/* Cuba / Espelho */}
+        <path d="M5 22h14M12 5V2M10 2h4" strokeLinecap="round" />
+        <path d="M6 12a6 6 0 0 0 12 0H6z" />
+        <rect x="8" y="5" width="8" height="6" rx="1" />
+      </svg>
+    ),
+  },
+  {
+    value: 'area_servico',
+    label: 'Área de Serviço',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-6 h-6">
+        {/* Lavadora / Tanque */}
+        <rect x="4" y="3" width="16" height="18" rx="2" />
+        <line x1="4" y1="8" x2="20" y2="8" />
+        <circle cx="12" cy="14" r="3" />
+        <circle cx="12" cy="14" r="1" />
+      </svg>
+    ),
+  },
+  {
+    value: 'sala',
+    label: 'Sala de Estar',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-6 h-6">
+        {/* Sofá minimalista */}
+        <path d="M3 14V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M2 14h20v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4z" />
+        <path d="M6 14v-3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v3" />
+      </svg>
+    ),
+  },
+]
+
 export function NewProject({ clients, onBack, onCreate }: NewProjectProps) {
-  const [cliente, setCliente] = useState('')
-  const [clienteNovo, setClienteNovo] = useState(false)
-  const [clienteNovoNome, setClienteNovoNome] = useState('')
-  const [ambiente, setAmbiente] = useState<Ambiente>('cozinha')
   const [nome, setNome] = useState('')
+  const [ambiente, setAmbiente] = useState<Ambiente>('cozinha')
+  const [cliente, setCliente] = useState('')
+  const [clienteId, setClienteId] = useState('')
 
-  const clienteNome = clienteNovo ? clienteNovoNome : cliente
-  const nomeProjeto = useMemo(() => {
-    const base = (clienteNome || 'Projeto').trim()
-    const am = AMBIENTES.find((a) => a.id === ambiente)?.nome ?? ''
-    return nome || `${am} do ${base}`
-  }, [clienteNome, ambiente, nome])
+  const selectClient = (id: string) => {
+    const found = clients.find((c) => c.id === id)
+    if (found) {
+      setCliente(found.nome)
+      setClienteId(found.id)
+    } else {
+      setClienteId('')
+    }
+  }
 
-  const clienteId = !clienteNovo ? clients.find((c) => c.nome === cliente)?.id ?? null : null
-
-  const valid = clienteNovo ? clienteNovoNome.trim().length > 0 : cliente.length > 0
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!nome.trim() || !cliente.trim()) return
+    onCreate({
+      nome: nome.trim(),
+      ambiente,
+      cliente: cliente.trim(),
+      clienteId: clienteId || undefined,
+    })
+  }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 pt-6 pb-20">
-      <button type="button" onClick={onBack} className="flex items-center gap-1 text-sm text-steel-400 active:text-steel-200">
-        <ArrowLeft size={16} />
-        Voltar
-      </button>
+    <div className="max-w-md mx-auto px-4 pt-6 pb-12">
+      <header className="mb-6">
+        <button type="button" onClick={onBack} className="text-sm text-steel-400 hover:text-steel-200">
+          ← Cancelar
+        </button>
+        <h1 className="text-2xl font-bold mt-1 text-steel-50">Iniciar projeto</h1>
+        <p className="text-sm text-steel-400 mt-1">Insira os dados iniciais do cliente e do ambiente.</p>
+      </header>
 
-      <h1 className="text-2xl font-bold text-steel-50 mt-3">Novo projeto</h1>
+      <form onSubmit={submit} className="space-y-5">
+        <div className="space-y-4 rounded-2xl bg-steel-800/35 border border-steel-750 p-4">
+          {/* Cliente existente */}
+          {clients.length > 0 && (
+            <label className="block">
+              <span className="text-xs font-semibold text-steel-400 uppercase tracking-wider block mb-1.5">Selecionar cliente existente</span>
+              <select
+                className="w-full rounded-xl bg-steel-900 border border-steel-700/60 text-sm text-steel-200 px-3 py-2.5 outline-none focus:border-wood-500"
+                value={clienteId}
+                onChange={(e) => selectClient(e.target.value)}
+              >
+                <option value="">-- Novo cliente --</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome} ({c.contato || 'Sem contato'})
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
-      <div className="mt-6 rounded-2xl border border-steel-700/60 bg-steel-800/40 p-4">
-        <label className="block text-sm font-semibold text-steel-200">Cliente</label>
-        <div className="mt-2 flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setClienteNovo(false)}
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              !clienteNovo ? 'bg-wood-500 text-white' : 'bg-steel-700/50 text-steel-300'
-            }`}
-          >
-            Cliente existente
-          </button>
-          <button
-            type="button"
-            onClick={() => setClienteNovo(true)}
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              clienteNovo ? 'bg-wood-500 text-white' : 'bg-steel-700/50 text-steel-300'
-            }`}
-          >
-            Novo cliente
-          </button>
+          {/* Nome do Cliente */}
+          <label className="block">
+            <span className="text-xs font-semibold text-steel-400 uppercase tracking-wider block mb-1.5">Nome do Cliente</span>
+            <input
+              type="text"
+              required
+              disabled={!!clienteId}
+              placeholder="Ex: João Silva"
+              value={cliente}
+              onChange={(e) => setCliente(e.target.value)}
+              className="w-full rounded-xl bg-steel-900 border border-steel-700/60 text-sm text-steel-200 px-3.5 py-2.5 outline-none focus:border-wood-500 disabled:opacity-50"
+            />
+          </label>
+
+          {/* Nome do Projeto */}
+          <label className="block">
+            <span className="text-xs font-semibold text-steel-400 uppercase tracking-wider block mb-1.5">Nome do Ambiente / Projeto</span>
+            <input
+              type="text"
+              required
+              placeholder="Ex: Cozinha Planejada L"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              className="w-full rounded-xl bg-steel-900 border border-steel-700/60 text-sm text-steel-200 px-3.5 py-2.5 outline-none focus:border-wood-500"
+            />
+          </label>
         </div>
 
-        {clienteNovo ? (
-          <input
-            type="text"
-            value={clienteNovoNome}
-            onChange={(e) => setClienteNovoNome(e.target.value)}
-            placeholder="Nome do cliente"
-            className="mt-2 w-full rounded-lg border border-steel-600 bg-steel-900 px-3 py-2 text-sm text-steel-50 outline-none focus:border-wood-500"
-          />
-        ) : (
-          <select
-            value={cliente}
-            onChange={(e) => setCliente(e.target.value)}
-            className="mt-2 w-full rounded-lg border border-steel-600 bg-steel-900 px-3 py-2 text-sm text-steel-50 outline-none focus:border-wood-500"
-          >
-            <option value="">Selecione um cliente</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.nome}>
-                {c.nome}
-              </option>
+        {/* Escolha do Ambiente */}
+        <div>
+          <span className="text-xs font-semibold text-steel-400 uppercase tracking-wider block mb-2 px-1">Selecione o Ambiente</span>
+          <div className="grid grid-cols-2 gap-2.5">
+            {AMBIENTES.map((a) => (
+              <button
+                key={a.value}
+                type="button"
+                onClick={() => setAmbiente(a.value)}
+                className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${
+                  ambiente === a.value
+                    ? 'border-wood-500 bg-wood-500/10 text-wood-400 font-bold'
+                    : 'border-steel-750 bg-steel-800/25 text-steel-400 hover:border-steel-600'
+                }`}
+              >
+                <div className={`mb-2 ${ambiente === a.value ? 'text-wood-400' : 'text-steel-500'}`}>{a.icon}</div>
+                <span className="text-xs">{a.label}</span>
+              </button>
             ))}
-          </select>
-        )}
-      </div>
-
-      <div className="mt-4 rounded-2xl border border-steel-700/60 bg-steel-800/40 p-4">
-        <label className="block text-sm font-semibold text-steel-200">Ambiente</label>
-        <div className="mt-2 grid grid-cols-3 gap-2">
-          {AMBIENTES.map((a) => (
-            <button
-              key={a.id}
-              type="button"
-              onClick={() => setAmbiente(a.id)}
-              className={`rounded-xl px-3 py-3 text-sm font-medium transition-colors ${
-                ambiente === a.id ? 'bg-wood-500 text-white' : 'bg-steel-700/50 text-steel-300'
-              }`}
-            >
-              <span className="block text-lg">{a.icone}</span>
-              {a.nome}
-            </button>
-          ))}
+          </div>
         </div>
-      </div>
 
-      <div className="mt-4 rounded-2xl border border-steel-700/60 bg-steel-800/40 p-4">
-        <label className="block text-sm font-semibold text-steel-200">Nome do projeto</label>
-        <input
-          type="text"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          placeholder={nomeProjeto}
-          className="mt-2 w-full rounded-lg border border-steel-600 bg-steel-900 px-3 py-2 text-sm text-steel-50 outline-none focus:border-wood-500"
-        />
-      </div>
-
-      <button
-        type="button"
-        disabled={!valid}
-        onClick={() => onCreate({ nome: nomeProjeto, cliente: clienteNome, clienteId, ambiente })}
-        className="mt-6 w-full flex items-center justify-center gap-2 rounded-2xl bg-wood-500 text-white font-semibold py-4 active:bg-wood-600 transition-colors disabled:opacity-40 disabled:active:bg-wood-500"
-      >
-        Criar projeto
-        <ArrowRight size={18} />
-      </button>
+        <button
+          type="submit"
+          className="w-full rounded-2xl bg-wood-500 hover:bg-wood-600 text-white font-bold py-4 text-sm active:scale-[0.99] transition-all shadow-lg shadow-wood-500/20"
+        >
+          Avançar para Módulos
+        </button>
+      </form>
     </div>
   )
 }
+

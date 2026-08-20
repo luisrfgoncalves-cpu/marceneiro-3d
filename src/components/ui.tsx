@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+﻿import { useState, type ReactNode } from 'react'
 import { ChevronDown, Minus, Plus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -47,13 +47,14 @@ interface StepperProps {
   step?: number
   unit?: string
   decimals?: number
+  className?: string
 }
 
-export function Stepper({ label, value, onChange, min = 0, max = 10000, step = 10, unit = 'mm', decimals = 0 }: StepperProps) {
+export function Stepper({ label, value, onChange, min = 0, max = 10000, step = 10, unit = 'mm', decimals = 0, className }: StepperProps) {
   const round = (v: number) => (decimals > 0 ? Math.round(v * 10) / 10 : Math.round(v))
   const set = (v: number) => onChange(Math.min(max, Math.max(min, round(v))))
   return (
-    <label className="flex items-center justify-between gap-3">
+    <label className={`flex items-center justify-between gap-3 ${className ?? ''}`}>
       <span className="text-sm text-steel-300">{label}</span>
       <span className="flex items-center gap-1">
         <button
@@ -106,21 +107,21 @@ export function Toggle({ label, checked, onChange }: ToggleProps) {
   )
 }
 
-interface SegmentedProps<T extends string> {
+interface SegmentedProps<T extends string | number> {
   label: string
   value: T
   options: Array<{ value: T; label: string }>
   onChange: (v: T) => void
 }
 
-export function Segmented<T extends string>({ label, value, options, onChange }: SegmentedProps<T>) {
+export function Segmented<T extends string | number>({ label, value, options, onChange }: SegmentedProps<T>) {
   return (
     <div>
       <div className="text-sm text-steel-300 mb-1.5">{label}</div>
       <div className="flex flex-wrap gap-1">
         {options.map((o) => (
           <button
-            key={o.value}
+            key={String(o.value)}
             type="button"
             onClick={() => onChange(o.value)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
