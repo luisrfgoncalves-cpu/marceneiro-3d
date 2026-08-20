@@ -7,6 +7,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three-stdlib'
 import { Evaluator, Brush, SUBTRACTION } from 'three-bvh-csg'
 import type { Piece } from '../engine/types'
 import { materialColor } from './colors'
@@ -94,8 +95,14 @@ export function SinglePiece({ piece, onClick }: PieceProps) {
   const matProps = useMemo(() => getMaterial(piece.materialId, color, piece.grainDirection), [piece.materialId, color, piece.grainDirection])
   const isStone = piece.materialId.startsWith('pedra_')
   const geometry = useMemo(() => {
+        // Se não tem recortes, usamos RoundedBox para realismo fotorealista (bisote nas quinas)
+    if (!piece.cutouts || piece.cutouts.length === 0) {
+      // 1mm radius bevel for realistic MDF edges
+      return new RoundedBoxGeometry(piece.w * MM, piece.h * MM, piece.d * MM, 2, 0.001)
+    }
+    
+    // Se tem recortes, usamos BoxGeometry normal por causa do CSG (CSG com RoundedBox é pesado e falho)
     const baseGeo = new THREE.BoxGeometry(piece.w * MM, piece.h * MM, piece.d * MM)
-    if (!piece.cutouts || piece.cutouts.length === 0) return baseGeo
 
     try {
       const evaluator = new Evaluator()
