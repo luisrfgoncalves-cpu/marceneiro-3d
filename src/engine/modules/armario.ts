@@ -1,4 +1,4 @@
-// Caixaria "base e chapéu passam" (Seção 6.1) — usada por armário, aéreo,
+// Caixaria "base e chapéu passa" (Seção 6.1) — usada por armário, aéreo,
 // torre e guarda-roupa. Diferente do balcão: NÃO há tampo em balanço; base e
 // chapéu atravessam a largura total (peça mestra) e as laterais ficam entre eles.
 
@@ -39,11 +39,13 @@ export function computeArmario(config: ModuloConfig, rules: EngineRules) {
   }
 
   // Base "passa" — largura total (peça mestra, Seção 6.1)
+  // Garantir altura mínima de 1mm
+  const baseH = Math.max(ec, 1)
   pieces.push(
     box({
       name: 'Base',
       w: L,
-      h: ec,
+      h: baseH,
       d: P,
       position: { x: 0, y: baseY, z: 0 },
       materialId: config.materialExterno,
@@ -52,20 +54,23 @@ export function computeArmario(config: ModuloConfig, rules: EngineRules) {
   )
 
   // Chapéu "passa" — largura total
+  // Garantir altura mínima de 1mm
+  const chapuH = Math.max(ec, 1)
   pieces.push(
     box({
       name: 'Chapéu',
       w: L,
-      h: ec,
+      h: chapuH,
       d: P,
-      position: { x: 0, y: A - ec, z: 0 },
+      position: { x: 0, y: A - chapuH, z: 0 },
       materialId: config.materialExterno,
       edgeBanding: { bottom: true, left: true, right: true, top: true },
     }),
   )
 
   // Laterais entre base e chapéu
-  const lateralH = A - baseY - 2 * ec
+  // Garantir altura mínima
+  const lateralH = Math.max(1, A - baseY - 2 * ec)
   const lateralY = baseY + ec
   for (const side of ['L', 'R'] as const) {
     pieces.push(
@@ -98,8 +103,10 @@ export function computeArmario(config: ModuloConfig, rules: EngineRules) {
   let doorArea: Region = { ...interior }
   if (config.montantes.ativo) {
     const dePe = !config.montantes.deitado
+    // Garantir altura mínima de montante
+    const montanteAlturaMin = Math.max(1, rules.montanteMostraDePe + rules.portaRemonteMontanteDePe)
     const montH = dePe
-      ? rules.montanteMostraDePe + rules.portaRemonteMontanteDePe
+      ? Math.max(montanteAlturaMin, rules.montanteMostraDePe + rules.portaRemonteMontanteDePe)
       : Math.max(config.montantes.largura, rules.rodapeEspessuraPadrao)
     pieces.push(
       box({
@@ -134,12 +141,14 @@ export function computeArmario(config: ModuloConfig, rules: EngineRules) {
     const esp = config.prateleiras.espessura
     const folga = rules.prateleiraFolga
     const w = interior.w - 2 * folga
+    // Garantir largura mínima de prateleira
+    const validW = Math.max(1, w)
     for (let i = 1; i <= n; i += 1) {
       const y = interior.y + (interior.h * i) / (n + 1)
       pieces.push(
         box({
           name: `Prateleira ${i}`,
-          w,
+          w: validW,
           h: esp,
           d: interior.d,
           position: { x: interior.x + folga, y: y - esp, z: interior.z },
@@ -160,13 +169,16 @@ export function computeArmario(config: ModuloConfig, rules: EngineRules) {
   const portaEsp = portas.espessura
 
   for (const d of doors) {
+    // Garantir largura e altura mínimas da porta
+    const doorW = Math.max(1, d.w)
+    const doorH = Math.max(1, d.h)
     pieces.push(
       box({
         name: `Porta ${d.index + 1}`,
-        w: d.w,
-        h: d.h,
-        d: portaEsp,
-        position: { x: d.x, y: d.y, z: d.z - portaEsp },
+        w: doorW,
+        h: doorH,
+        d: Math.max(1, portaEsp),
+        position: { x: d.x, y: d.y, z: Math.max(0, d.z - portaEsp) },
         materialId: config.materialExterno,
         edgeBanding: { top: true, bottom: true, left: true, right: true },
       }),

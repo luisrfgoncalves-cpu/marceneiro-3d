@@ -39,7 +39,6 @@ export function computeModule(config: ModuloConfig, rules: EngineRules): ModuleR
   } else if (cfg.moduloTipo === 'gaveteiro') {
     const r = computeGaveteiro(cfg, rules)
     pieces = r.pieces
-    hinges = r.hinges
     extraWarnings = r.warnings
   } else if (cfg.moduloTipo === 'home') {
     const r = computeHome(cfg, rules)

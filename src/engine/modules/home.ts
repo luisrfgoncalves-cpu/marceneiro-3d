@@ -7,8 +7,12 @@ import { box, type Region } from '../geometry'
 import { computeFundo } from '../rules/fundo'
 import { computeTaponamento } from '../rules/taponamento'
 import { computePistons, layoutDoors, layoutVasculantes } from '../rules/portas'
-import { computeHingeOffsets, resolveHingeConflicts } from '../rules/dobradicas'
-import type { Hinge, ModuloConfig, Piece, Piston } from '../types'
+import { computeHingeOffsets, resolveHingeConflicts, type ConflictZone } from '../rules/dobradicas'
+import type { Hinge, ModuloConfig, Piece, Piston, Warning } from '../types'
+
+function clamp(n: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, n))
+}
 
 export function computeHome(config: ModuloConfig, rules: EngineRules) {
   const L = config.largura
@@ -18,17 +22,17 @@ export function computeHome(config: ModuloConfig, rules: EngineRules) {
   const pieces: Piece[] = []
   const hinges: Hinge[] = []
   const pistons: Piston[] = []
+  const warnings: Warning[] = []
 
-  // Rodapé opcional (assim como balcão)
+  // Rodapé opcional
   let baseY = 0
   if (config.rodape.ativo) {
-    const rodRecuo = config.rodape.recuo
     pieces.push(
       box({
         name: 'Rodapé',
-        w: L,
-        h: config.rodape.altura,
-        d: Math.max(P - rodRecuo, rules.rodapeEspessuraPadrao),
+        w: clamp(L, 1, 500),
+        h: clamp(config.rodape.altura, 1, 500),
+        d: Math.max(clamp(P - config.rodape.recuo, 1, 500), rules.rodapeEspessuraPadrao),
         position: { x: 0, y: 0, z: 0 },
         materialId: config.materialExterno,
         edgeBanding: { top: true, left: true, right: true },
@@ -38,38 +42,39 @@ export function computeHome(config: ModuloConfig, rules: EngineRules) {
   }
 
   // Base e chapéu "passam" (como no armário convencional)
+  const baseH = Math.max(1, ec)
   pieces.push(
     box({
       name: 'Base',
-      w: L,
-      h: ec,
-      d: P,
+      w: clamp(L, 1, 500),
+      h: baseH,
+      d: clamp(P, 1, 500),
       position: { x: 0, y: baseY, z: 0 },
       materialId: config.materialExterno,
       edgeBanding: { top: true, left: true, right: true, bottom: true },
     }),
     box({
       name: 'Chapéu',
-      w: L,
-      h: ec,
-      d: P,
-      position: { x: 0, y: A - ec, z: 0 },
+      w: clamp(L, 1, 500),
+      h: baseH,
+      d: clamp(P, 1, 500),
+      position: { x: 0, y: A - baseH, z: 0 },
       materialId: config.materialExterno,
       edgeBanding: { bottom: true, left: true, right: true, top: true },
     }),
   )
 
   // Laterais entre base e chapéu
-  const lateralH = A - baseY - 2 * ec
+  const lateralH = Math.max(1, A - baseY - 2 * ec)
   const lateralY = baseY + ec
   for (const side of ['L', 'R'] as const) {
     pieces.push(
       box({
         name: side === 'L' ? 'Lateral esquerda' : 'Lateral direita',
-        w: ec,
+        w: clamp(ec, 1, L - 1),
         h: lateralH,
-        d: P,
-        position: { x: side === 'L' ? 0 : L - ec, y: lateralY, z: 0 },
+        d: clamp(P, 1, 500),
+        position: { x: clamp(side === 'L' ? 0 : L - ec, 0, L - 1), y: lateralY, z: 0 },
         materialId: config.materialExterno,
         edgeBanding: { top: true, bottom: true, left: true, right: true },
       }),
@@ -77,45 +82,45 @@ export function computeHome(config: ModuloConfig, rules: EngineRules) {
   }
 
   const interior: Region = {
-    x: ec,
+    x: clamp(ec, 1, L - 1),
     y: lateralY,
-    w: L - 2 * ec,
+    w: clamp(L - 2 * ec, 1, L - 1),
     h: lateralH,
     z: 0,
-    d: P,
+    d: clamp(P, 1, 500),
   }
 
-  // Fundo opcional (Seção 6.4: 6mm, espessura maior, ou sem fundo)
+  // Fundo opcional
   pieces.push(...computeFundo(config.sistemaFundo, interior, ec, config.materialInterno, rules))
 
   // Taponamento opcional
   pieces.push(
     ...computeTaponamento(
-      { lado: config.taponamento.esquerda, side: 'esquerda', moduleWidth: L, moduleDepth: P, height: lateralH, y: lateralY, materialId: config.materialExterno },
+      { lado: config.taponamento.esquerda, side: 'esquerda', moduleWidth: clamp(L, 1, 500), moduleDepth: clamp(P, 1, 500), height: lateralH, y: lateralY, materialId: config.materialExterno },
       rules,
     ),
     ...computeTaponamento(
-      { lado: config.taponamento.direita, side: 'direita', moduleWidth: L, moduleDepth: P, height: lateralH, y: lateralY, materialId: config.materialExterno },
+      { lado: config.taponamento.direita, side: 'direita', moduleWidth: clamp(L, 1, 500), moduleDepth: clamp(P, 1, 500), height: lateralH, y: lateralY, materialId: config.materialExterno },
       rules,
     ),
   )
 
-  // Prateleiras internas (Seção 5.6)
-  const shelfZones: Array<{ top: number; bottom: number }> = []
-  const nPrateleiras = Math.min(config.prateleiras.quantidade, 8)
-  if (nPrateleiras > 0) {
-    const esp = config.prateleiras.espessura
+  // Prateleiras internas
+  const shelfZones: ConflictZone[] = []
+  const n = Math.min(config.prateleiras.quantidade, 8)
+  if (n > 0) {
+    const esp = clamp(config.prateleiras.espessura, 1, 100)
     const folga = rules.prateleiraFolga
-    const w = interior.w - 2 * folga
-    for (let i = 1; i <= nPrateleiras; i += 1) {
-      const y = interior.y + (interior.h * i) / (nPrateleiras + 1)
+    const w = clamp(L - 2 * folga, 1, L - 1)
+    for (let i = 1; i <= n; i += 1) {
+      const y = interior.y + (interior.h * i) / (n + 1)
       pieces.push(
         box({
           name: `Prateleira ${i}`,
-          w,
+          w: w,
           h: esp,
-          d: interior.d - ec, // um recuo leve para cabos/nichos
-          position: { x: interior.x + folga, y: y - esp, z: interior.z },
+          d: clamp(interior.d, 1, 500),
+          position: { x: clamp(interior.x + folga, 1, L - 2), y: clamp(y - esp, interior.y, interior.y + interior.h), z: interior.z },
           materialId: config.materialInterno,
           edgeBanding: { left: true, right: true },
         }),
@@ -124,53 +129,65 @@ export function computeHome(config: ModuloConfig, rules: EngineRules) {
     }
   }
 
-  // Portas (Seção 6.4: sobreposta ou embutida)
+  // Portas
   const portas = config.portas
-  if (portas.quantidade > 0) {
-    const isBasculante = portas.tipo === 'basculante'
-    const doors = isBasculante
-      ? layoutVasculantes(interior, portas.quantidade, rules)
-      : layoutDoors(interior, portas.quantidade, portas.tipo, rules)
-    const portaEsp = portas.espessura
+  const isBasculante = portas.tipo === 'basculante'
+  const doors = isBasculante
+    ? layoutVasculantes(interior, portas.quantidade, rules)
+    : layoutDoors(interior, portas.quantidade, portas.tipo, rules)
+  const portaEsp = clamp(portas.espessura, 1, 200)
 
-    // Verifica se a porta é embutida. Se sim, ela recua para dentro da lateral (z recua pelo valor da espessura da porta).
-    // Opcionalmente, pode ser configurado em config.portas.embutida (booleano).
-    // Para Home/Rack suportamos por padrão embutida se configurada.
+  for (const d of doors) {
+    const doorW = Math.max(1, d.w)
+    const doorH = Math.max(1, d.h)
+
+    // Check if door is embutida (recessed into the frame)
     const isEmbutida = (portas as any).embutida ?? false
 
-    for (const d of doors) {
-      const zPos = isEmbutida
-        ? d.z - portaEsp - ec // recuada para dentro do montante/lateral
-        : d.z - portaEsp
+    let zPos = Math.max(0, d.z - portaEsp)
+    let finalW = doorW
+    let finalH = doorH
+    let finalX = Math.max(1, d.x)
+    let finalY = Math.max(1, d.y)
 
-      pieces.push(
-        box({
-          name: `Porta ${d.index + 1}${isEmbutida ? ' (embutida)' : ''}`,
-          w: isEmbutida ? d.w - 2 * rules.portaGapLateral : d.w,
-          h: isEmbutida ? d.h - 2 * rules.portaGapLateral : d.h,
-          d: portaEsp,
-          position: {
-            x: isEmbutida ? d.x + rules.portaGapLateral : d.x,
-            y: isEmbutida ? d.y + rules.portaGapLateral : d.y,
-            z: zPos,
-          },
-          materialId: config.materialExterno,
-          edgeBanding: { top: true, bottom: true, left: true, right: true },
-        }),
+    if (isEmbutida) {
+      zPos = Math.max(0, d.z - portaEsp - ec) // recess more for the frame
+      finalW = Math.max(1, d.w - 2 * rules.portaGapLateral)
+      finalH = Math.max(1, d.h - 2 * rules.portaGapLateral)
+      finalX = Math.max(1, d.x + rules.portaGapLateral)
+      finalY = Math.max(1, d.y + rules.portaGapLateral)
+    }
+
+    pieces.push(
+      box({
+        name: `Porta ${d.index + 1}${isEmbutida ? ' (embutida)' : ''}`,
+        w: finalW,
+        h: finalH,
+        d: portaEsp,
+        position: { x: finalX, y: finalY, z: zPos },
+        materialId: config.materialExterno,
+        edgeBanding: { top: true, bottom: true, left: true, right: true },
+      }),
+    )
+
+    if (isBasculante) {
+      if (portas.pistao) pistons.push(...computePistons([d]))
+    } else {
+      const computed = computeHingeOffsets(
+        { doorId: `porta_${d.index + 1}`, doorHeightMm: doorH, doorTopY: d.y, count: portas.dobradicasPorPorta },
+        rules,
       )
-
-      if (isBasculante) {
-        if (portas.pistao) pistons.push(...computePistons([d]))
-      } else {
-        const computed = computeHingeOffsets(
-          { doorId: `porta_${d.index + 1}`, doorHeightMm: d.h, doorTopY: d.y, count: portas.dobradicasPorPorta },
-          rules,
-        )
-        const resolved = resolveHingeConflicts(computed, d.y, shelfZones, rules)
-        hinges.push(...resolved.hinges)
+      const resolved = resolveHingeConflicts(computed, d.y, shelfZones, rules)
+      hinges.push(...resolved.hinges)
+      if (resolved.relocations > 0) {
+        warnings.push({
+          type: 'dobradica_conflito',
+          pieceName: `Porta ${d.index + 1}`,
+          message: `${resolved.relocations} dobradiça(s) realocada(s) por conflito com prateleira.`,
+        })
       }
     }
   }
 
-  return { pieces, hinges, pistons }
+  return { pieces, hinges, pistons, warnings }
 }

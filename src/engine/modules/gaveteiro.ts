@@ -8,7 +8,7 @@ import type { EngineRules } from '../rules'
 import { box, type Region } from '../geometry'
 import { computeFundo } from '../rules/fundo'
 import { computeGavetaCaixa } from '../rules/gaveta'
-import type { Hinge, ModuloConfig, Piece, Warning } from '../types'
+import type { ModuloConfig, Piece, Warning } from '../types'
 
 interface FrenteItem {
   tipo: 'gaveta' | 'sapateira'
@@ -17,17 +17,20 @@ interface FrenteItem {
   espessura: number
 }
 
+function clamp(n: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, n))
+}
+
 export function computeGaveteiro(config: ModuloConfig, rules: EngineRules) {
   const L = config.largura
   const A = config.altura
   const P = config.profundidade
   const ec = config.espessuraCaixa
   const pieces: Piece[] = []
-  const hinges: Hinge[] = []
   const warnings: Warning[] = []
 
-  const montanteLargura = rules.montanteGaveteiroLargura
-  const montanteEsp = rules.montanteEspessura
+  // Montante deitado na frente tem largura fixa de 10cm (100mm) por regra
+  const MONTANTE_LARGURA = rules.montanteGaveteiroLargura
   const orelhinha = config.orelhinha.ativo ? config.orelhinha.largura : 0
   const lateralD = P + orelhinha
 
@@ -36,10 +39,10 @@ export function computeGaveteiro(config: ModuloConfig, rules: EngineRules) {
     pieces.push(
       box({
         name: side === 'L' ? 'Lateral esquerda' : 'Lateral direita',
-        w: ec,
-        h: A,
+        w: clamp(ec, 1, L - 1),
+        h: clamp(A, 1, 500),
         d: lateralD,
-        position: { x: side === 'L' ? 0 : L - ec, y: 0, z: 0 },
+        position: { x: side === 'L' ? 0 : clamp(L - ec, 1, L - 1), y: 0, z: 0 },
         materialId: config.materialExterno,
         edgeBanding: { top: true, bottom: true, left: true, right: true },
       }),
@@ -48,39 +51,39 @@ export function computeGaveteiro(config: ModuloConfig, rules: EngineRules) {
 
   // Montantes deitados na frente (em cima e embaixo) — 10cm, por dentro
   for (const pos of ['inferior', 'superior'] as const) {
-    const y = pos === 'inferior' ? 0 : A - montanteLargura
+    const y = pos === 'inferior' ? 0 : A - MONTANTE_LARGURA
     pieces.push(
       box({
         name: `Montante ${pos} (frente)`,
-        w: L - 2 * ec,
-        h: montanteLargura,
-        d: P,
-        position: { x: ec, y, z: 0 },
+        w: clamp(L - 2 * ec, 1, L - 1),
+        h: clamp(MONTANTE_LARGURA, 1, L - 1),
+        d: clamp(P, 1, 500),
+        position: { x: clamp(ec, 1, L - 2), y: y, z: 0 },
         materialId: config.materialExterno,
         edgeBanding: { top: true, bottom: true, left: true, right: true },
       }),
     )
   }
 
-  // Montante deitado atrás
-  const fundoEsp = rules.fundoEspessuraPadrao
+  // Montante deitado atrás (10cm de largura, por dentro das laterais)
+  const fundoEsp = Math.max(1, rules.fundoEspessuraPadrao)
   pieces.push(
     box({
       name: 'Montante traseiro',
-      w: L - 2 * ec,
-      h: A - 2 * montanteLargura,
-      d: montanteEsp,
-      position: { x: ec, y: montanteLargura, z: fundoEsp },
+      w: clamp(L - 2 * ec, 1, L - 1),
+      h: clamp(A - 2 * MONTANTE_LARGURA, 1, A - 1),
+      d: fundoEsp,
+      position: { x: clamp(ec, 1, L - 2), y: MONTANTE_LARGURA, z: fundoEsp },
       materialId: config.materialExterno,
     }),
   )
 
   // Interior (entre montantes)
   const interior: Region = {
-    x: ec,
-    y: montanteLargura,
-    w: L - 2 * ec,
-    h: A - 2 * montanteLargura,
+    x: clamp(ec, 1, L - 2),
+    y: MONTANTE_LARGURA,
+    w: clamp(L - 2 * ec, 1, L - 2),
+    h: clamp(A - 2 * MONTANTE_LARGURA, 1, A - 1),
     z: 0,
     d: P,
   }
@@ -106,32 +109,33 @@ export function computeGaveteiro(config: ModuloConfig, rules: EngineRules) {
 
   const zonaTop = interior.y + interior.h
   const gap = rules.gavetaFrenteGap
-  let cursorTop = montanteLargura - rules.frenteEmbutidaMontante
+  const FRENTE_EMBUTIDA = rules.frenteEmbutidaMontante
+  let cursorTop = MONTANTE_LARGURA - FRENTE_EMBUTIDA
 
   for (const item of items) {
-    const y = cursorTop - item.altura
+    const y = clamp(cursorTop - item.altura, 1, zonaTop - 1)
     pieces.push(
       box({
         name: item.tipo === 'gaveta' ? `Frente gaveta ${item.index + 1}` : `Frente sapateira ${item.index + 1}`,
-        w: interior.w,
-        h: item.altura,
-        d: item.espessura,
-        position: { x: interior.x, y, z: P - item.espessura },
+        w: clamp(interior.w, 1, L - 1),
+        h: clamp(item.altura, 1, 500),
+        d: clamp(item.espessura, 1, 200),
+        position: { x: clamp(interior.x, 1, L - 2), y: y, z: clamp(P - item.espessura, 1, P - 1) },
         materialId: config.materialExterno,
         edgeBanding: { top: true, bottom: true, left: true, right: true },
       }),
     )
     if (item.tipo === 'gaveta') {
       const gavetaAltura = rules.gavetaAlturaPadrao
-      const gavetaY = Math.max(y + (item.altura - gavetaAltura), montanteLargura)
+      const gavetaY = Math.max(y + (item.altura - gavetaAltura), MONTANTE_LARGURA)
       pieces.push(
         ...computeGavetaCaixa(
           {
-            x: interior.x,
+            x: clamp(interior.x, 1, L - 2),
             y: gavetaY,
             z: 0,
-            largura: interior.w,
-            profundidade: P - rules.gavetaRecuoTrilho,
+            largura: clamp(interior.w, 1, L - 1),
+            profundidade: Math.max(1, P - rules.gavetaRecuoTrilho),
             altura: gavetaAltura,
             sistema: config.gavetas.sistema,
             espessura: config.gavetas.espessura,
@@ -141,34 +145,33 @@ export function computeGaveteiro(config: ModuloConfig, rules: EngineRules) {
         ),
       )
     }
-    cursorTop = y - gap
+    cursorTop = Math.max(1, y - gap)
   }
 
   // Maleiro no topo (prateleira do gaveteiro — gaveta rasa, frente 6mm)
   if (config.prateleiras.quantidade > 0) {
-    const maleiroAltura = rules.maleiroFrenteAltura
-    const maleiroEsp = rules.maleiroFrenteEspessura
-    const maleiroY = zonaTop - maleiroAltura
+    const maleiroAltura = Math.max(1, rules.maleiroFrenteAltura)
+    const maleiroEsp = Math.max(1, rules.maleiroFrenteEspessura)
+    const maleiroY = Math.max(1, zonaTop - maleiroAltura)
     pieces.push(
       box({
         name: 'Frente maleiro',
-        w: interior.w,
+        w: clamp(interior.w, 1, L - 1),
         h: maleiroAltura,
         d: maleiroEsp,
-        position: { x: interior.x, y: maleiroY, z: P - maleiroEsp },
+        position: { x: clamp(interior.x, 1, L - 2), y: maleiroY, z: Math.max(1, P - maleiroEsp) },
         materialId: config.materialExterno,
         edgeBanding: { top: true, bottom: true, left: true, right: true },
       }),
     )
-    // caixa rasa do maleiro
     pieces.push(
       ...computeGavetaCaixa(
         {
-          x: interior.x,
+          x: clamp(interior.x, 1, L - 2),
           y: maleiroY,
           z: 0,
-          largura: interior.w,
-          profundidade: P - rules.gavetaRecuoTrilho,
+          largura: clamp(interior.w, 1, L - 1),
+          profundidade: Math.max(1, P - rules.gavetaRecuoTrilho),
           altura: maleiroAltura,
           sistema: config.gavetas.sistema,
           espessura: config.gavetas.espessura,
@@ -186,5 +189,5 @@ export function computeGaveteiro(config: ModuloConfig, rules: EngineRules) {
     }
   }
 
-  return { pieces, hinges, pistons: [], warnings }
+  return { pieces, warnings }
 }
