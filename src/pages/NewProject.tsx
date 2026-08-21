@@ -2,6 +2,7 @@
 // Substituído emojis infantis por SVGs profissionais linha fina minimalistas.
 
 import { useState } from 'react'
+import { useCep } from '../lib/useCep'
 import type { DbCliente } from '../lib/db'
 import type { Ambiente } from '../engine/types'
 
@@ -88,6 +89,22 @@ export function NewProject({ clients, onBack, onCreate }: NewProjectProps) {
   const [ambiente, setAmbiente] = useState<Ambiente>('cozinha')
   const [cliente, setCliente] = useState('')
   const [clienteId, setClienteId] = useState('')
+  const [cep, setCep] = useState('')
+  const [endereco, setEnderecoStr] = useState('')
+  const { buscando, buscarCep, endereco: endObj, erro: cepErro } = useCep()
+
+  // When endereco object is found, populate the address string
+  const handleCepChange = (val: string) => {
+    const limpo = val.replace(/\D/g, '').slice(0, 8)
+    const fmt = limpo.length > 5 ? limpo.slice(0, 5) + '-' + limpo.slice(5) : limpo
+    setCep(fmt)
+    if (limpo.length === 8) buscarCep(limpo)
+  }
+
+  // Auto-fill address from CEP
+  if (endObj && !endereco) {
+    setEnderecoStr(`${endObj.logradouro}, ${endObj.bairro} — ${endObj.localidade}/${endObj.uf}`)
+  }
 
   const selectClient = (id: string) => {
     const found = clients.find((c) => c.id === id)
@@ -154,6 +171,34 @@ export function NewProject({ clients, onBack, onCreate }: NewProjectProps) {
               className="w-full rounded-xl bg-steel-900 border border-steel-700/60 text-sm text-steel-200 px-3.5 py-2.5 outline-none focus:border-wood-500 disabled:opacity-50"
             />
           </label>
+
+          {/* CEP do Cliente */}
+          {!clienteId && (
+            <label className="block">
+              <span className="text-xs font-semibold text-steel-400 uppercase tracking-wider block mb-1.5">
+                CEP do Cliente (opcional)
+              </span>
+              <div className="relative">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="00000-000"
+                  value={cep}
+                  onChange={(e) => handleCepChange(e.target.value)}
+                  className="w-full rounded-xl bg-steel-900 border border-steel-700/60 text-sm text-steel-200 px-3.5 py-2.5 outline-none focus:border-wood-500 pr-10"
+                />
+                {buscando && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-wood-400 text-xs animate-spin">⟳</div>
+                )}
+              </div>
+              {cepErro && <p className="text-red-400 text-xs mt-1">{cepErro}</p>}
+              {endObj && (
+                <p className="text-green-400 text-xs mt-1 font-medium">
+                  ✓ {endObj.logradouro}, {endObj.bairro} — {endObj.localidade}/{endObj.uf}
+                </p>
+              )}
+            </label>
+          )}
 
           {/* Nome do Projeto */}
           <label className="block">

@@ -3,9 +3,9 @@
 
 import { useState, useMemo } from 'react'
 import { pdf } from '@react-pdf/renderer'
-import { FileText, Share2, ChevronLeft, Package } from 'lucide-react'
+import { FileText, Share2, ChevronLeft, Package, TableProperties } from 'lucide-react'
 import type { EnvironmentProject } from '../engine/environment'
-import { calcularCusto, downloadCSV } from '../lib/exportUtils'
+import { calcularCusto, downloadCSV, downloadExcel } from '../lib/exportUtils'
 import { BudgetDocument } from '../components/BudgetPDF'
 import { getActiveProfile } from '../engine/profiles'
 
@@ -182,6 +182,16 @@ export function BudgetScreen({ project, onBack }: BudgetScreenProps) {
         >
           <Package size={20} />
           Exportar Lista de Peças (CSV)
+        </button>
+
+        {/* Exportar Excel */}
+        <button
+          type="button"
+          onClick={() => downloadExcel(project)}
+          className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl border border-green-800/50 bg-green-900/20 text-green-300 font-bold hover:bg-green-800/30 active:scale-[0.98] transition-all"
+        >
+          <TableProperties size={20} />
+          Exportar Excel Formatado (.xlsx)
         </button>
 
         {/* Gerar PDF */}

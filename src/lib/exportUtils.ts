@@ -2,6 +2,7 @@
 // para CSV (importar no app de corte) e calcula o custo do projeto.
 
 import type { EnvironmentProject } from '../engine/environment'
+import ExcelJS from 'exceljs'
 import { DEFAULT_RULES } from '../engine/rules'
 import { computeModule } from '../engine/computeModule'
 
@@ -129,4 +130,78 @@ export function calcularCusto(
     margem: Math.round(margem * 100) / 100,
     total: Math.round(total * 100) / 100,
   }
+}
+
+/** Gera e baixa planilha Excel formatada com todas as peças do projeto */
+export async function downloadExcel(project: EnvironmentProject): Promise<void> {
+  const pecas = coletarPecas(project)
+  const workbook = new ExcelJS.Workbook()
+  workbook.creator = 'Marceneiro 3D'
+  workbook.created = new Date()
+
+  const sheet = workbook.addWorksheet('Plano de Corte', {
+    pageSetup: { paperSize: 9, orientation: 'landscape' },
+  })
+
+  // Estilização do cabeçalho
+  const headerRow = sheet.addRow(['Módulo', 'Peça', 'Larg.(mm)', 'Alt.(mm)', 'Qtde', 'Material', 'Fita T', 'Fita B', 'Fita E', 'Fita D'])
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 }
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFB45309' } }
+    cell.border = { bottom: { style: 'medium', color: { argb: 'FFCA8A04' } } }
+    cell.alignment = { vertical: 'middle', horizontal: 'center' }
+  })
+  sheet.getRow(1).height = 28
+
+  // Colunas
+  sheet.columns = [
+    { key: 'modulo', width: 22 },
+    { key: 'nome', width: 28 },
+    { key: 'largura', width: 13 },
+    { key: 'altura', width: 13 },
+    { key: 'quantidade', width: 8 },
+    { key: 'material', width: 20 },
+    { key: 'ft', width: 7 },
+    { key: 'fb', width: 7 },
+    { key: 'fe', width: 7 },
+    { key: 'fd', width: 7 },
+  ]
+
+  // Dados com cores alternadas
+  pecas.forEach((p, i) => {
+    const row = sheet.addRow([
+      p.modulo, p.nome, p.largura, p.altura, p.quantidade, p.material,
+      p.fitaBordaTop ? 'S' : 'N',
+      p.fitaBordaBottom ? 'S' : 'N',
+      p.fitaBordaLeft ? 'S' : 'N',
+      p.fitaBordaRight ? 'S' : 'N',
+    ])
+    if (i % 2 === 0) {
+      row.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8F5F0' } }
+      })
+    }
+    row.getCell(3).numFmt = '0'
+    row.getCell(4).numFmt = '0'
+    row.getCell(5).numFmt = '0'
+    row.alignment = { vertical: 'middle' }
+  })
+
+  // Rodapé com totais
+  sheet.addRow([])
+  const totalRow = sheet.addRow([
+    `Total de peças: ${pecas.reduce((a, p) => a + p.quantidade, 0)}`,
+    '', '', '', '', '', '', '', '', '',
+  ])
+  totalRow.getCell(1).font = { bold: true, color: { argb: 'FFB45309' } }
+
+  // Download
+  const buffer = await workbook.xlsx.writeBuffer()
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `corte_${(project.nome ?? 'projeto').replace(/\s+/g, '_')}.xlsx`
+  link.click()
+  URL.revokeObjectURL(url)
 }
