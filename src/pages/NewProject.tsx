@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import { useCep } from '../lib/useCep'
+import { useCnpj } from '../lib/useCnpj'
 import type { DbCliente } from '../lib/db'
 import type { Ambiente } from '../engine/types'
 
@@ -92,6 +93,7 @@ export function NewProject({ clients, onBack, onCreate }: NewProjectProps) {
   const [cep, setCep] = useState('')
   const [endereco, setEnderecoStr] = useState('')
   const { buscando, buscarCep, endereco: endObj, erro: cepErro } = useCep()
+  const { buscando: buscandoCnpj, buscarCnpj, empresa: cnpjObj, erro: cnpjErro } = useCnpj()
 
   // When endereco object is found, populate the address string
   const handleCepChange = (val: string) => {
@@ -104,6 +106,14 @@ export function NewProject({ clients, onBack, onCreate }: NewProjectProps) {
   // Auto-fill address from CEP
   if (endObj && !endereco) {
     setEnderecoStr(`${endObj.logradouro}, ${endObj.bairro} — ${endObj.localidade}/${endObj.uf}`)
+  }
+  // Auto-fill from CNPJ
+  if (cnpjObj && !cliente) {
+    setCliente(cnpjObj.nomeFantasia || cnpjObj.razaoSocial)
+    if (cnpjObj.cep) {
+      setCep(cnpjObj.cep)
+      setEnderecoStr(`${cnpjObj.logradouro}, ${cnpjObj.bairro} — ${cnpjObj.municipio}/${cnpjObj.uf}`)
+    }
   }
 
   const selectClient = (id: string) => {
@@ -155,6 +165,35 @@ export function NewProject({ clients, onBack, onCreate }: NewProjectProps) {
                   </option>
                 ))}
               </select>
+            </label>
+          )}
+
+          {/* CNPJ do Cliente (PJ) */}
+          {!clienteId && (
+            <label className="block">
+              <span className="text-xs font-semibold text-steel-400 uppercase tracking-wider block mb-1.5">
+                CNPJ do Cliente (opcional)
+              </span>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="00.000.000/0001-00"
+                  onChange={(e) => {
+                    const clean = e.target.value.replace(/\D/g, '')
+                    if (clean.length === 14) buscarCnpj(clean)
+                  }}
+                  className="w-full rounded-xl bg-steel-900 border border-steel-700/60 text-sm text-steel-200 px-3.5 py-2.5 outline-none focus:border-wood-500 pr-10"
+                />
+                {buscandoCnpj && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-wood-400 text-xs animate-spin">⟳</div>
+                )}
+              </div>
+              {cnpjErro && <p className="text-red-400 text-xs mt-1">{cnpjErro}</p>}
+              {cnpjObj && (
+                <p className="text-green-400 text-xs mt-1 font-medium">
+                  ✓ {cnpjObj.razaoSocial}
+                </p>
+              )}
             </label>
           )}
 

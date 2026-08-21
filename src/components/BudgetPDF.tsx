@@ -2,7 +2,7 @@
 // Roda 100% no celular, sem necessidade de servidor.
 
 import {
-  Document, Page, Text, View, StyleSheet
+  Document, Page, Text, View, StyleSheet, Image
 } from '@react-pdf/renderer'
 import type { EnvironmentProject } from '../engine/environment'
 import type { CustoDetalhado } from '../lib/exportUtils'
@@ -38,6 +38,7 @@ const styles = StyleSheet.create({
   assinatura: { marginTop: 40, paddingTop: 20, borderTopWidth: 1, borderTopColor: '#e2e8f0' },
   assinLine: { borderBottomWidth: 1, borderBottomColor: '#334155', width: 220, marginTop: 30 },
   assinLabel: { fontSize: 8, color: '#64748b', marginTop: 4 },
+  signatureImage: { width: 140, height: 40, marginTop: -30, alignSelf: 'center', marginBottom: 5 },
 })
 
 interface BudgetDocProps {
@@ -45,9 +46,10 @@ interface BudgetDocProps {
   custo: CustoDetalhado
   nomeEmpresa?: string
   marceneiro?: string
+  assinaturaBase64?: string
 }
 
-export function BudgetDocument({ project, custo, nomeEmpresa = 'Marceneiro 3D', marceneiro }: BudgetDocProps) {
+export function BudgetDocument({ project, custo, nomeEmpresa = 'Marceneiro 3D', marceneiro, assinaturaBase64 }: BudgetDocProps) {
   const hoje = new Date().toLocaleDateString('pt-BR')
   const AMBIENTE_LABEL: Record<string, string> = {
     cozinha: 'Cozinha', dormitorio: 'Dormitório', banheiro: 'Banheiro',
@@ -123,8 +125,12 @@ export function BudgetDocument({ project, custo, nomeEmpresa = 'Marceneiro 3D', 
               <Text style={styles.assinLabel}>{marceneiro ?? nomeEmpresa}</Text>
               <Text style={styles.assinLabel}>Responsável Técnico</Text>
             </View>
-            <View>
-              <View style={styles.assinLine} />
+            <View style={{ alignItems: 'center' }}>
+              {assinaturaBase64 ? (
+                <Image src={assinaturaBase64} style={styles.signatureImage} />
+              ) : (
+                <View style={styles.assinLine} />
+              )}
               <Text style={styles.assinLabel}>{project.cliente ?? 'Cliente'}</Text>
               <Text style={styles.assinLabel}>De acordo</Text>
             </View>

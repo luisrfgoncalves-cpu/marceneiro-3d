@@ -5,9 +5,11 @@ import { useState, useMemo } from 'react'
 import { pdf } from '@react-pdf/renderer'
 import { FileText, Share2, ChevronLeft, Package, TableProperties } from 'lucide-react'
 import type { EnvironmentProject } from '../engine/environment'
-import { calcularCusto, downloadCSV, downloadExcel } from '../lib/exportUtils'
+import { calcularCusto, downloadCSV, downloadExcel, coletarPecas } from '../lib/exportUtils'
 import { BudgetDocument } from '../components/BudgetPDF'
 import { getActiveProfile } from '../engine/profiles'
+import { SignaturePad } from '../components/SignaturePad'
+import { downloadBarcode } from '../lib/barcode'
 
 interface BudgetScreenProps {
   project: EnvironmentProject
@@ -26,6 +28,8 @@ export function BudgetScreen({ project, onBack }: BudgetScreenProps) {
   })
   const [gerandoPDF, setGerandoPDF] = useState(false)
   const [pdfReady, setPdfReady] = useState<string | null>(null)
+  const [assinatura, setAssinatura] = useState<string | null>(null)
+  const [abaAtiva, setAbaAtiva] = useState<'valores' | 'etiquetas'>('valores')
 
   const custo = useMemo(
     () => calcularCusto(project, precoPorM2, custoFerragens, margemLucro),
@@ -36,7 +40,7 @@ export function BudgetScreen({ project, onBack }: BudgetScreenProps) {
     setGerandoPDF(true)
     try {
       const blob = await pdf(
-        <BudgetDocument project={project} custo={custo} nomeEmpresa={nomeEmpresa} />
+        <BudgetDocument project={project} custo={custo} nomeEmpresa={nomeEmpresa} assinaturaBase64={assinatura || undefined} />
       ).toBlob()
       const url = URL.createObjectURL(blob)
       setPdfReady(url)
@@ -76,8 +80,28 @@ export function BudgetScreen({ project, onBack }: BudgetScreenProps) {
         <p className="text-sm text-steel-400 mt-1">{project.nome} · {project.modulos.length} módulos</p>
       </header>
 
-      {/* Nome da empresa */}
-      <div className="bg-bg-panel border border-border-strong rounded-2xl p-4 mb-4">
+      {/* Abas */}
+      <div className="flex gap-2 mb-6 bg-steel-900 p-1.5 rounded-2xl border border-steel-750">
+        <button
+          type="button"
+          onClick={() => setAbaAtiva('valores')}
+          className={`flex-1 py-2.5 text-center text-xs font-bold rounded-xl transition-all ${abaAtiva === 'valores' ? 'bg-wood-600 text-white' : 'text-steel-400 hover:text-steel-200'}`}
+        >
+          Valores & PDF
+        </button>
+        <button
+          type="button"
+          onClick={() => setAbaAtiva('etiquetas')}
+          className={`flex-1 py-2.5 text-center text-xs font-bold rounded-xl transition-all ${abaAtiva === 'etiquetas' ? 'bg-wood-600 text-white' : 'text-steel-400 hover:text-steel-200'}`}
+        >
+          Etiquetas & Peças
+        </button>
+      </div>
+
+      {abaAtiva === 'valores' ? (
+        <>
+          {/* Nome da empresa */}
+          <div className="bg-bg-panel border border-border-strong rounded-2xl p-4 mb-4">
         <label className="text-xs font-bold text-steel-400 uppercase tracking-wider">Nome da sua marcenaria (aparece no PDF)</label>
         <input
           type="text"
@@ -171,6 +195,50 @@ export function BudgetScreen({ project, onBack }: BudgetScreenProps) {
           </div>
         </div>
       </div>
+
+          {/* Assinatura do Cliente */}
+          <div className="bg-bg-panel border border-border-strong rounded-2xl p-4 mb-6">
+            <SignaturePad
+              onSave={(base64) => { setAssinatura(base64); setPdfReady(null); }}
+              onClear={() => { setAssinatura(null); setPdfReady(null); }}
+            />
+          </div>
+        </>
+      ) : (
+        <div className="space-y-4">
+          <div className="bg-bg-panel border border-border-strong rounded-2xl p-4">
+            <div className="text-xs font-bold text-steel-400 uppercase tracking-wider mb-3">Imprimir Etiquetas (Código de Barras)</div>
+            <p className="text-xs text-steel-400 mb-4">Clique no ícone de download para salvar a etiqueta PNG com código de barras da peça para identificação no estoque.</p>
+            
+            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+              {project.modulos.flatMap(m => {
+                // Generate a simple list of pieces for listing
+                try {
+                  const pieces = coletarPecas(project).filter(p => p.modulo === (m.config.nome ?? m.config.moduloTipo))
+                  return pieces.map((p, idx) => (
+                    <div key={m.id + '-' + idx} className="flex justify-between items-center p-3 rounded-xl bg-steel-900 border border-steel-750">
+                      <div>
+                        <div className="text-xs font-bold text-steel-200">{p.nome}</div>
+                        <div className="text-[10px] text-steel-500 font-mono">{p.largura}x{p.altura} mm · {p.material}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => downloadBarcode(m.id.substring(0, 8) + '-' + idx, `${p.nome} (${p.largura}x${p.altura})`)}
+                        className="p-2 rounded-lg bg-steel-800 border border-steel-700 text-wood-400 hover:text-wood-300"
+                        title="Baixar Etiqueta"
+                      >
+                        🏷️
+                      </button>
+                    </div>
+                  ))
+                } catch {
+                  return []
+                }
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ações */}
       <div className="space-y-3">
