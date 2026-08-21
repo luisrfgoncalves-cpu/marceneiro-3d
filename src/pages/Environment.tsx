@@ -22,6 +22,7 @@ interface EnvironmentProps {
   rules: EngineRules
   onBack: () => void
   onAddModule: () => void
+  onBudget?: () => void
   onEditModule: (id: string) => void
   onRemoveModule: (id: string) => void
   onToggleStatus: () => void
@@ -30,7 +31,8 @@ interface EnvironmentProps {
   readOnly?: boolean
 }
 
-export function Environment({
+export // Note: onBudget navigates to the budget generation screen
+function Environment({
   project,
   rules,
   onBack,
@@ -54,6 +56,7 @@ export function Environment({
     [project.modulos],
   )
 
+  // onBudget is available but placed inline in parent App.tsx instead
   const handleSave = async () => {
     setSaving(true)
     const ok = await onSave()

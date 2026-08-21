@@ -16,6 +16,7 @@ import { Home } from './pages/Home'
 import { NewProject, type NewProjectData } from './pages/NewProject'
 import { TemplateGrid } from './pages/TemplateGrid'
 import { Settings } from './pages/Settings'
+import { BudgetScreen } from './pages/BudgetScreen'
 
 // 3D (Three.js) é carregado sob demanda — mantém o bundle inicial leve no mobile
 // e a biblioteca de módulos instantânea (Seção 10/11.3).
@@ -24,7 +25,7 @@ const ModuleAdjuster = lazy(() =>
 )
 const Environment = lazy(() => import('./pages/Environment').then((m) => ({ default: m.Environment })))
 
-type Screen = 'auth' | 'onboarding' | 'home' | 'new_project' | 'environment' | 'grid' | 'adjuster' | 'settings'
+type Screen = 'auth' | 'onboarding' | 'home' | 'new_project' | 'environment' | 'grid' | 'adjuster' | 'settings' | 'budget'
 type GridMode = 'add' | 'edit'
 
 // Verifica se o usuário já escolheu "modo demo" neste dispositivo
@@ -196,6 +197,10 @@ export default function App() {
         }}
       />
     )
+  }
+
+  if (screen === 'budget' && current) {
+    return <BudgetScreen project={current} onBack={() => setScreen('environment')} />
   }
 
   if (screen === 'settings') {
