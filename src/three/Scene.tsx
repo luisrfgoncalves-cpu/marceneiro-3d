@@ -7,24 +7,45 @@ import { OrbitControls, Grid, ContactShadows, Environment } from '@react-three/d
 import type { ModuleResult } from '../engine/types'
 import { Pieces } from './Pieces'
 import { Pistons } from './Pistons'
-import { RotateCcw } from 'lucide-react'
-import { useRef } from 'react'
+import { Hinges } from './Hinges'
+import { GlCapture } from './GlCapture'
+import { Fx } from './Fx'
+import { captureScreenshot } from '../lib/screenshot'
+import { RotateCcw, Camera, Bomb } from 'lucide-react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
 interface SceneProps {
   result: ModuleResult
+  screenshotName?: string
 }
 
-export function Scene({ result }: SceneProps) {
+export function Scene({ result, screenshotName = 'modulo' }: SceneProps) {
   const { width, depth } = result.dimensions
   const w = Math.max(width * 0.001, 0.5)
   const d = Math.max(depth * 0.001, 0.5)
   const controlsRef = useRef<OrbitControlsImpl>(null)
+  const glRef = useRef<import('three').WebGLRenderer | null>(null)
+  const [, force] = useState(0)
+  const [explode, setExplode] = useState(0)
+  const onGlReady = useCallback((gl: import('three').WebGLRenderer) => {
+    glRef.current = gl
+    force((n) => n + 1)
+  }, [])
+
+  const moduleCenters = useMemo(
+    () => new Map([['__single__', { x: width / 2, z: depth / 2, h: result.dimensions.height }]]),
+    [width, depth, result.dimensions.height],
+  )
 
   const resetView = () => {
     if (controlsRef.current) {
       controlsRef.current.reset()
     }
+  }
+
+  const handleScreenshot = () => {
+    captureScreenshot(glRef.current, `${screenshotName}-3d`)
   }
 
   return (
@@ -34,6 +55,7 @@ export function Scene({ result }: SceneProps) {
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: true, preserveDrawingBuffer: true }}
       >
+        <GlCapture onReady={onGlReady} />
         {/* Iluminação Premium e Vívida */}
         <ambientLight intensity={0.9} />
         {/* Sol forte */}
@@ -43,8 +65,13 @@ export function Scene({ result }: SceneProps) {
         {/* Luz de baixo quente (rebote do chão) */}
         <directionalLight position={[0, -5, 0]} intensity={0.3} color="#fef08a" />
 
-        <Pieces pieces={result.pieces} />
+        <Pieces
+          pieces={result.pieces.map((p) => ({ ...p, moduleId: '__single__' }))}
+          explode={explode}
+          moduleCenters={moduleCenters}
+        />
         <Pistons result={result} />
+        <Hinges result={result} />
         
         <Grid
           position={[w / 2, 0.001, d / 2]}
@@ -60,6 +87,7 @@ export function Scene({ result }: SceneProps) {
         />
         <ContactShadows position={[w / 2, 0.002, d / 2]} opacity={0.4} scale={Math.max(w, d) + 2} blur={2.0} far={3} />
         <Environment preset="apartment" />
+        <Fx />
         <OrbitControls
           ref={controlsRef}
           makeDefault
@@ -70,15 +98,41 @@ export function Scene({ result }: SceneProps) {
         />
       </Canvas>
 
-      {/* Botão flutuante para resetar a visualização da câmera */}
-      <button
-        type="button"
-        onClick={resetView}
-        className="absolute right-4 bottom-4 w-9.5 h-9.5 grid place-items-center rounded-xl bg-steel-900/80 hover:bg-steel-800 text-steel-200 border border-steel-700/50 shadow-lg active:scale-95 transition-all z-10"
-        title="Resetar Câmera"
-      >
-        <RotateCcw size={15} />
-      </button>
+      {/* Slider vista explodida */}
+      <div className="absolute left-4 bottom-4 z-10 flex items-center gap-2 rounded-xl bg-steel-900/80 border border-steel-700/50 shadow-lg px-3 py-2 backdrop-blur-sm">
+        <Bomb size={14} className="text-steel-300 shrink-0" />
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={Math.round(explode * 100)}
+          onChange={(e) => setExplode(Number(e.target.value) / 100)}
+          className="w-24 md:w-36 accent-violet-500"
+          aria-label="Vista explodida"
+          title="Vista explodida"
+        />
+        <span className="text-[10px] font-mono text-steel-300 w-7 text-right tabular-nums">{Math.round(explode * 100)}%</span>
+      </div>
+
+      {/* Botões flutuantes: resetar câmera + capturar PNG */}
+      <div className="absolute right-4 bottom-4 flex flex-col gap-2 z-10">
+        <button
+          type="button"
+          onClick={handleScreenshot}
+          className="w-9.5 h-9.5 grid place-items-center rounded-xl bg-steel-900/80 hover:bg-steel-800 text-steel-200 border border-steel-700/50 shadow-lg active:scale-95 transition-all"
+          title="Salvar imagem PNG"
+        >
+          <Camera size={15} />
+        </button>
+        <button
+          type="button"
+          onClick={resetView}
+          className="w-9.5 h-9.5 grid place-items-center rounded-xl bg-steel-900/80 hover:bg-steel-800 text-steel-200 border border-steel-700/50 shadow-lg active:scale-95 transition-all"
+          title="Resetar Câmera"
+        >
+          <RotateCcw size={15} />
+        </button>
+      </div>
     </div>
   )
 }

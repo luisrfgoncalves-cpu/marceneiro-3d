@@ -5,10 +5,18 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { RuleStore } from './engine/configStore'
 import { DEFAULT_RULES, type EngineRules } from './engine/rules'
-import { uid, type EnvironmentProject, type ModuleInstance } from './engine/environment'
+import {
+  distributeEvenly,
+  uid,
+  type DecorItem,
+  type DecorTipo,
+  type EnvironmentProject,
+  type ModuleInstance,
+} from './engine/environment'
 import type { ModuloConfig } from './engine/types'
 import { PriceStore } from './lib/prices'
 import { Persistence } from './lib/persistence'
+import { useEnvStore } from './state/envStore'
 import type { DbCliente } from './lib/db'
 import { Auth } from './pages/Auth'
 import { Onboarding } from './pages/Onboarding'
@@ -168,6 +176,102 @@ export default function App() {
     if (current?.id === id) setCurrent(null)
   }
 
+  const patchProject = (updated: EnvironmentProject) => {
+    setCurrent(updated)
+    setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+  }
+
+  const handleMoveModule = (id: string, dir: -1 | 1) => {
+    if (!current) return
+    const idx = current.modulos.findIndex((m) => m.id === id)
+    const j = idx + dir
+    if (idx < 0 || j < 0 || j >= current.modulos.length) return
+    const arr = [...current.modulos]
+    ;[arr[idx], arr[j]] = [arr[j], arr[idx]]
+    patchProject({ ...current, modulos: arr })
+  }
+
+  const handleRotateModule = (id: string) => {
+    if (!current) return
+    patchProject({
+      ...current,
+      modulos: current.modulos.map((m) => (m.id === id ? { ...m, rotacionado: !m.rotacionado } : m)),
+    })
+  }
+
+  const handleGapChange = (id: string, gapAntes: number) => {
+    if (!current) return
+    patchProject({
+      ...current,
+      modulos: current.modulos.map((m) => (m.id === id ? { ...m, gapAntes } : m)),
+    })
+  }
+
+  const handleModuleFreeMove = (id: string, posX: number, posZ: number) => {
+    if (!current) return
+    patchProject({
+      ...current,
+      modulos: current.modulos.map((m) => (m.id === id ? { ...m, posX, posZ } : m)),
+    })
+  }
+
+  const handleOrganize = (mode: 'encostar' | 'distribuir') => {
+    if (!current) return
+    const modulos = distributeEvenly(current.modulos)
+    patchProject({
+      ...current,
+      modulos: mode === 'encostar' ? modulos.map((m) => ({ ...m, gapAntes: 0 })) : modulos,
+    })
+  }
+
+  const handleAddDecor = (tipo: DecorTipo) => {
+    if (!current) return
+    const item: DecorItem = { id: uid(), tipo, x: 800, z: 700, rot: 0 }
+    const list = current.decoracoes ?? []
+    patchProject({ ...current, decoracoes: [...list, item] })
+  }
+
+  const handleMoveDecor = (id: string, x: number, z: number) => {
+    if (!current) return
+    patchProject({
+      ...current,
+      decoracoes: (current.decoracoes ?? []).map((d) => (d.id === id ? { ...d, x, z } : d)),
+    })
+  }
+
+  const handleRotateDecor = (id: string) => {
+    if (!current) return
+    patchProject({
+      ...current,
+      decoracoes: (current.decoracoes ?? []).map((d) =>
+        d.id === id ? { ...d, rot: (((d.rot + 90) % 360) as DecorItem['rot']) } : d,
+      ),
+    })
+  }
+
+  const handleRemoveDecor = (id: string) => {
+    if (!current) return
+    useEnvStore.getState().select(null)
+    patchProject({
+      ...current,
+      decoracoes: (current.decoracoes ?? []).filter((d) => d.id !== id),
+    })
+  }
+
+  const handlePieceMaterial = (moduleId: string, pieceName: string, materialId: string | null) => {
+    if (!current) return
+    patchProject({
+      ...current,
+      modulos: current.modulos.map((m) => {
+        if (m.id !== moduleId) return m
+        const custom: Record<string, NonNullable<ModuloConfig['pecasCustomizadas']>[string]> = { ...m.config.pecasCustomizadas }
+        if (materialId) custom[pieceName] = { ...custom[pieceName], material: materialId }
+        else delete custom[pieceName]?.material
+        return { ...m, config: { ...m.config, pecasCustomizadas: custom } }
+      }),
+    })
+  }
+
   // --- Telas ---
 
   // Auth loading state (Supabase presente, mas ainda verificando sessão)
@@ -280,22 +384,26 @@ export default function App() {
           setScreen('adjuster')
         }}
         onRemoveModule={(id) => {
-          const updated = { ...current, modulos: current.modulos.filter((m) => m.id !== id) }
-          setCurrent(updated)
-          setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+          patchProject({ ...current, modulos: current.modulos.filter((m) => m.id !== id) })
         }}
         onDuplicateModule={(mod) => {
-          const updated = { ...current, modulos: [...current.modulos, mod] }
-          setCurrent(updated)
-          setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+          patchProject({ ...current, modulos: [...current.modulos, mod] })
         }}
+        onMoveModule={handleMoveModule}
+        onRotateModule={handleRotateModule}
+        onGapChange={handleGapChange}
+        onModuleFreeMove={handleModuleFreeMove}
+        onOrganize={handleOrganize}
+        onAddDecor={handleAddDecor}
+        onMoveDecor={handleMoveDecor}
+        onRotateDecor={handleRotateDecor}
+        onRemoveDecor={handleRemoveDecor}
+        onPieceMaterial={handlePieceMaterial}
         onToggleStatus={() => {
-          const updated: EnvironmentProject = {
+          patchProject({
             ...current,
             status: current.status === 'aprovado' ? 'rascunho' : 'aprovado',
-          }
-          setCurrent(updated)
-          setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+          })
         }}
         onSave={handleSave}
       />

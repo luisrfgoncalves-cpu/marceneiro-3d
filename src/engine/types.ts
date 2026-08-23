@@ -25,6 +25,8 @@ export interface Piece {
   materialId: string
   edgeBandId: string | null
   grainDirection: GrainDirection
+  // Puxador desta frente (portas/frentes de gaveta) — propagado da config pelo motor
+  puxador?: { tipo: PuxadorTipo; cor: PuxadorCor }
   // faces que recebem fita de borda (top/bottom = eixo Y, left/right = eixo X)
   edgeBanding: {
     top: boolean

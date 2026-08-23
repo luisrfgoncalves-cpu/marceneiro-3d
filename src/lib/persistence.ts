@@ -148,7 +148,9 @@ export class Persistence {
               arr.push(m as { id: string; config: Record<string, unknown>; ordem: number })
               byProject.set(m.project_id, arr)
             }
-            return rows.map((r) => this.fromRow(r as never, byProject.get(r.id) ?? []))
+            return rows.map((r) =>
+              this.fromRow(r as never, byProject.get(r.id) ?? [], (r as { decor?: unknown }).decor),
+            )
           }
         }
       } catch {
@@ -163,7 +165,7 @@ export class Persistence {
     try {
       const { data: row, error } = await this.supabase
         .from('projects')
-        .select('id,nome,ambiente,cliente,status,updated_at')
+        .select('id,nome,ambiente,cliente,status,updated_at,decor')
         .eq('id', projectId)
         .maybeSingle()
       if (error || !row) return null
@@ -174,7 +176,7 @@ export class Persistence {
         .eq('project_id', projectId)
 
       const modules = (modRows ?? []).map(m => m as { id: string; config: Record<string, unknown>; ordem: number })
-      return this.fromRow(row as never, modules)
+      return this.fromRow(row as never, modules, (row as { decor?: unknown }).decor)
     } catch {
       return null
     }
@@ -183,14 +185,25 @@ export class Persistence {
   private fromRow(
     row: { id: string; nome: string; ambiente: string; cliente: string; status: string; updated_at: string },
     modules: Array<{ id: string; config: Record<string, unknown>; ordem: number }>,
+    decor?: unknown,
   ): EnvironmentProject {
     const modulos: ModuleInstance[] = modules
       .slice()
       .sort((a, b) => a.ordem - b.ordem)
       .map((m) => {
-        const config = m.config as unknown as EnvironmentProject['modulos'][number]['config']
-        return { id: m.id, nome: (config.nome as string) ?? 'Módulo', config }
+        const { _rotacionado, _gapAntes, _posX, _posZ, ...configRaw } = m.config as Record<string, unknown>
+        const config = configRaw as unknown as EnvironmentProject['modulos'][number]['config']
+        return {
+          id: m.id,
+          nome: (config.nome as string) ?? 'Módulo',
+          config,
+          rotacionado: Boolean(_rotacionado),
+          gapAntes: typeof _gapAntes === 'number' ? _gapAntes : undefined,
+          posX: typeof _posX === 'number' ? _posX : undefined,
+          posZ: typeof _posZ === 'number' ? _posZ : undefined,
+        }
       })
+    const decoracoes = Array.isArray(decor) ? (decor as EnvironmentProject['decoracoes']) : undefined
     return {
       id: row.id,
       nome: row.nome,
@@ -198,6 +211,7 @@ export class Persistence {
       clienteId: null,
       ambiente: this.toAmbiente(row.ambiente),
       modulos,
+      decoracoes,
       status: row.status === 'aprovado' ? 'aprovado' : 'rascunho',
       updatedAt: row.updated_at,
     }
@@ -222,6 +236,7 @@ export class Persistence {
             ambiente: project.ambiente,
             cliente: project.cliente,
             status: project.status,
+            decor: project.decoracoes ?? [],
             updated_at: new Date().toISOString(),
             userId: userId,
           },
@@ -235,8 +250,14 @@ export class Persistence {
             id: moduleId,
             project_id: project.id,
             modulo_tipo: p.module.config.moduloTipo,
-            config: p.module.config as unknown as Record<string, unknown>,
-            posicao: { x: p.offsetX, y: 0, rotacao: 0 },
+            config: {
+              ...p.module.config,
+              _rotacionado: Boolean(p.module.rotacionado),
+              _gapAntes: p.module.gapAntes ?? 0,
+              _posX: p.module.posX ?? null,
+              _posZ: p.module.posZ ?? null,
+            } as unknown as Record<string, unknown>,
+            posicao: { x: p.offsetX, y: 0, rotacao: p.module.rotacionado ? 90 : 0 },
             ordem: project.modulos.findIndex((m) => m.id === moduleId),
           })
           await this.supabase.from('project_module_pecas').insert(

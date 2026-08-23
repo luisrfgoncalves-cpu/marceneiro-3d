@@ -52,11 +52,11 @@ Sem `.env`, o app roda **offline** com os valores padrão do domínio embarcados
 
 ## Supabase — Aplicar migrações
 
-As migrações estão em `supabase/migrations/` (0001_schema, 0002_seed, 0003_ux, 0004_ferragens).
+As migrações estão em `supabase/migrations/` (0001_schema, 0002_seed, 0003_ux, 0004_ferragens, 0005_ambiente_decor).
 
 Opção A — **Dashboard SQL Editor** (recomendado):
 1. Abra o painel do Supabase > SQL Editor.
-2. Execute cada arquivo `.sql` em ordem (0001 → 0004).
+2. Execute cada arquivo `.sql` em ordem (0001 → 0005).
 3. Verifique se as tabelas foram criadas e os seeds inseridos.
 
 Opção B — **CLI** (se tiver Docker):
