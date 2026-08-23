@@ -10,6 +10,9 @@ import { BudgetDocument } from '../components/BudgetPDF'
 import { getActiveProfile } from '../engine/profiles'
 import { SignaturePad } from '../components/SignaturePad'
 import { downloadBarcode } from '../lib/barcode'
+import { DEFAULT_RULES } from '../engine/rules'
+import { computeModule } from '../engine/computeModule'
+import { computeDrilling, drillingToCSV } from '../engine/drilling'
 
 interface BudgetScreenProps {
   project: EnvironmentProject
@@ -22,6 +25,8 @@ export function BudgetScreen({ project, onBack }: BudgetScreenProps) {
   const [precoPorM2, setPrecoPorM2] = useState(180)
   const [custoFerragens, setCustoFerragens] = useState(120)
   const [margemLucro, setMargemLucro] = useState(35)
+  const [frete, setFrete] = useState(0)
+  const [desconto, setDesconto] = useState(0)
   const [nomeEmpresa, setNomeEmpresa] = useState(() => {
     const p = getActiveProfile()
     return p?.nome ?? 'Marceneiro 3D'
@@ -32,8 +37,8 @@ export function BudgetScreen({ project, onBack }: BudgetScreenProps) {
   const [abaAtiva, setAbaAtiva] = useState<'valores' | 'etiquetas'>('valores')
 
   const custo = useMemo(
-    () => calcularCusto(project, precoPorM2, custoFerragens, margemLucro),
-    [project, precoPorM2, custoFerragens, margemLucro]
+    () => calcularCusto(project, precoPorM2, custoFerragens, margemLucro, { frete, desconto }),
+    [project, precoPorM2, custoFerragens, margemLucro, frete, desconto]
   )
 
   const gerarPDF = async () => {
@@ -161,6 +166,36 @@ export function BudgetScreen({ project, onBack }: BudgetScreenProps) {
               </div>
             </div>
           </div>
+
+          <div>
+            <label className="text-sm font-bold text-steel-200">Frete / Entrega</label>
+            <div className="flex items-center gap-3 mt-2">
+              <input
+                type="range" min="0" max="1000" step="10"
+                value={frete}
+                onChange={e => setFrete(Number(e.target.value))}
+                className="flex-1 accent-wood-400"
+              />
+              <div className="w-24 text-right font-mono text-wood-400 font-bold text-sm">
+                {fmt(frete)}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-bold text-steel-200">Desconto</label>
+            <div className="flex items-center gap-3 mt-2">
+              <input
+                type="range" min="0" max="2000" step="10"
+                value={desconto}
+                onChange={e => setDesconto(Number(e.target.value))}
+                className="flex-1 accent-wood-400"
+              />
+              <div className="w-24 text-right font-mono text-wood-400 font-bold text-sm">
+                {fmt(desconto)}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -181,6 +216,12 @@ export function BudgetScreen({ project, onBack }: BudgetScreenProps) {
             <span className="text-steel-400">Mão de obra (estimada)</span>
             <span className="text-steel-200 font-mono">{fmt(custo.custo_servicos)}</span>
           </div>
+          {frete > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-steel-400">Frete</span>
+              <span className="text-steel-200 font-mono">{fmt(custo.frete)}</span>
+            </div>
+          )}
           <div className="border-t border-wood-600/30 pt-2 mt-2 flex justify-between">
             <span className="text-steel-400 text-sm">Subtotal</span>
             <span className="text-steel-200 font-mono text-sm">{fmt(custo.subtotal)}</span>
@@ -189,6 +230,12 @@ export function BudgetScreen({ project, onBack }: BudgetScreenProps) {
             <span className="text-steel-400">Margem ({margemLucro}%)</span>
             <span className="text-wood-400 font-mono">+ {fmt(custo.margem)}</span>
           </div>
+          {desconto > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-steel-400">Desconto</span>
+              <span className="text-green-400 font-mono">- {fmt(custo.desconto)}</span>
+            </div>
+          )}
           <div className="border-t border-wood-500/50 pt-3 mt-2 flex justify-between items-baseline">
             <span className="text-steel-100 font-bold text-base">TOTAL DO ORÇAMENTO</span>
             <span className="text-wood-300 font-bold font-mono text-2xl">{fmt(custo.total)}</span>
@@ -250,6 +297,32 @@ export function BudgetScreen({ project, onBack }: BudgetScreenProps) {
         >
           <Package size={20} />
           Exportar Lista de Peças (CSV)
+        </button>
+
+        {/* Exportar Furação CNC */}
+        <button
+          type="button"
+          onClick={() => {
+            const holes = project.modulos.flatMap(m => {
+              try {
+                const res = computeModule(m.config, DEFAULT_RULES)
+                return computeDrilling(res, m.config.nome ?? m.config.moduloTipo)
+              } catch { return [] }
+            })
+            if (holes.length === 0) { alert('Nenhum furo de dobradiça para exportar'); return }
+            const csv = drillingToCSV(holes)
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `furacao_${(project.nome ?? 'projeto').replace(/\s+/g,'_')}.csv`
+            a.click()
+            URL.revokeObjectURL(url)
+          }}
+          className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl border border-amber-800/50 bg-amber-900/20 text-amber-300 font-bold hover:bg-amber-800/30 active:scale-[0.98] transition-all"
+        >
+          <TableProperties size={20} />
+          Exportar Furação CNC (CSV)
         </button>
 
         {/* Exportar Excel */}

@@ -40,6 +40,12 @@ export interface Budget {
   total: number
 }
 
+export interface BudgetOptions {
+  frete?: number
+  desconto?: number
+  maoDeObraFator?: number // default 0.2 inside estimateCost, para compatibilidade mantém via parafusos
+}
+
 /** Metragem linear de fita de borda (m) de uma peça, conforme faces bandeadas. */
 export function pieceEdgeBandMeters(
   piece: { w: number; h: number; d: number; edgeBanding: { top: boolean; bottom: boolean; left: boolean; right: boolean } },
@@ -63,6 +69,7 @@ export function estimateCost(
   config: ModuloConfig,
   result: ModuleResult,
   catalog: PriceCatalog,
+  opts: BudgetOptions = {},
 ): Budget {
   const items: BudgetItem[] = []
 
@@ -168,8 +175,16 @@ export function estimateCost(
   nCavilhas += config.gavetas.quantidade * 8
   items.push({ label: 'Cavilha 8mm', qty: nCavilhas, unit: 'un', unitPrice: pPrices.cavilha ?? 0.10, total: nCavilhas * (pPrices.cavilha ?? 0.10) })
 
+  // 8. Frete e desconto (quando informado via BudgetOptions)
+  if (opts.frete && opts.frete > 0) {
+    items.push({ label: 'Frete', qty: 1, unit: 'un', unitPrice: opts.frete, total: opts.frete })
+  }
+  if (opts.desconto && opts.desconto > 0) {
+    items.push({ label: 'Desconto', qty: 1, unit: 'un', unitPrice: -opts.desconto, total: -opts.desconto })
+  }
+
   const total = items.reduce((s, i) => s + i.total, 0)
-  return { items: items.filter((i) => i.total > 0), total }
+  return { items: items.filter((i) => i.total !== 0), total }
 }
 
 /** Catálogo padrão (valores do seed do banco). Preços reais vêm do cadastro. */

@@ -24,6 +24,8 @@ export interface CustoDetalhado {
   custo_mdf: number
   custo_ferragens: number
   custo_servicos: number
+  frete: number
+  desconto: number
   subtotal: number
   margem: number
   total: number
@@ -105,27 +107,38 @@ export function downloadCSV(project: EnvironmentProject): void {
   URL.revokeObjectURL(url)
 }
 
+export interface CalcularCustoOpts {
+  frete?: number
+  desconto?: number
+  maoDeObraFator?: number // 0.2 = 20% padrão
+}
+
 export function calcularCusto(
   project: EnvironmentProject,
   precoPorM2: number,
   custoFerragens: number,
-  margemLucro: number
+  margemLucro: number,
+  opts: CalcularCustoOpts = {}
 ): CustoDetalhado {
+  const { frete = 0, desconto = 0, maoDeObraFator = 0.2 } = opts
   const pecas = coletarPecas(project)
   const totalM2 = pecas.reduce((acc, p) => acc + mmToM2(p.largura, p.altura, p.quantidade), 0)
   const numModulos = project.modulos.length
   const custo_ferragens = numModulos * custoFerragens
   const custo_mdf = totalM2 * precoPorM2
-  const custo_servicos = (custo_mdf + custo_ferragens) * 0.2
-  const subtotal = custo_mdf + custo_ferragens + custo_servicos
-  const margem = subtotal * (margemLucro / 100)
-  const total = subtotal + margem
+  const custo_servicos = (custo_mdf + custo_ferragens) * maoDeObraFator
+  const subtotalBruto = custo_mdf + custo_ferragens + custo_servicos + frete
+  const margem = subtotalBruto * (margemLucro / 100)
+  const subtotal = subtotalBruto + margem
+  const total = Math.max(0, subtotal - desconto)
 
   return {
     mdf_m2: Math.round(totalM2 * 100) / 100,
     custo_mdf: Math.round(custo_mdf * 100) / 100,
     custo_ferragens: Math.round(custo_ferragens * 100) / 100,
     custo_servicos: Math.round(custo_servicos * 100) / 100,
+    frete: Math.round(frete * 100) / 100,
+    desconto: Math.round(desconto * 100) / 100,
     subtotal: Math.round(subtotal * 100) / 100,
     margem: Math.round(margem * 100) / 100,
     total: Math.round(total * 100) / 100,

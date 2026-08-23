@@ -107,6 +107,22 @@ export function BudgetDocument({ project, custo, nomeEmpresa = 'Marceneiro 3D', 
               <Text style={styles.costoLabel}>Mão de obra estimada</Text>
               <Text style={styles.costoValue}>{R(custo.custo_servicos)}</Text>
             </View>
+            {custo.frete > 0 && (
+              <View style={styles.costoRow}>
+                <Text style={styles.costoLabel}>Frete</Text>
+                <Text style={styles.costoValue}>{R(custo.frete)}</Text>
+              </View>
+            )}
+            <View style={styles.costoRow}>
+              <Text style={styles.costoLabel}>Subtotal + Margem</Text>
+              <Text style={styles.costoValue}>{R(custo.subtotal)}</Text>
+            </View>
+            {custo.desconto > 0 && (
+              <View style={styles.costoRow}>
+                <Text style={styles.costoLabel}>Desconto</Text>
+                <Text style={[styles.costoValue, { color: '#059669' }]}>- {R(custo.desconto)}</Text>
+              </View>
+            )}
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>TOTAL DO ORÇAMENTO</Text>
               <Text style={styles.totalValue}>{R(custo.total)}</Text>
