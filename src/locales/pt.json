@@ -1,0 +1,337 @@
+{
+  "common": {
+    "appName": "Marceneiro 3D",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "back": "Voltar",
+    "next": "Avançar",
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "confirm": "Confirmar",
+    "close": "Fechar",
+    "settings": "Configurações",
+    "language": "Idioma",
+    "theme": "Tema",
+    "light": "Claro",
+    "dark": "Escuro",
+    "system": "Sistema",
+    "yes": "Sim",
+    "no": "Não",
+    "ok": "OK",
+    "retry": "Tentar novamente",
+    "optional": "Opcional",
+    "required": "Obrigatório"
+  },
+  "auth": {
+    "title": "Marceneiro 3D",
+    "login": "Entrar",
+    "signup": "Criar conta",
+    "email": "E-mail",
+    "password": "Senha",
+    "emailPlaceholder": "voce@email.com",
+    "passwordPlaceholder": "••••••••",
+    "passwordPlaceholderSignup": "Mínimo 6 caracteres",
+    "forgotPassword": "Esqueceu a senha?",
+    "noAccount": "Não tem conta?",
+    "hasAccount": "Já tem conta?",
+    "createAccount": "Criar conta",
+    "signIn": "Entrar",
+    "signUp": "Criar conta",
+    "demoMode": "Continuar sem conta (modo demo)",
+    "demoDescription": "No modo demo os projetos são salvos apenas neste dispositivo.",
+    "or": "ou",
+    "loading": "Entrando...",
+    "creatingAccount": "Criando conta...",
+    "errorInvalidCredentials": "E-mail ou senha incorretos.",
+    "errorUserExists": "E-mail já cadastrado. Faça login.",
+    "errorPasswordShort": "Senha deve ter ao menos 6 caracteres.",
+    "errorUnknown": "Erro desconhecido",
+    "successAccountCreated": "Conta criada! Verifique seu e-mail para confirmar e depois faça login.",
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha"
+  },
+  "onboarding": {
+    "welcome": "Bem-vindo ao Marceneiro 3D!",
+    "subtitle": "Crie projetos 3D profissionais em minutos",
+    "step1Title": "Projetos Rápidos",
+    "step1Desc": "Escolha templates prontos ou crie do zero",
+    "step2Title": "Ajuste Preciso",
+    "step2Desc": "Modifique medidas, materiais e ferragens",
+    "step3Title": "Orçamento Instantâneo",
+    "step3Desc": "Gere orçamentos e PDFs para clientes",
+    "getStarted": "Começar agora",
+    "skip": "Pular"
+  },
+  "home": {
+    "greeting": "Olá, Marceneiro! 👋",
+    "subtitle": "Gerencie seus projetos e impressione seus clientes com propostas 3D em segundos.",
+    "stats": {
+      "total": "Total",
+      "approved": "Aprovados",
+      "drafts": "Rascunhos"
+    },
+    "createProject": "Criar Novo Projeto",
+    "recentProjects": "Meus Projetos Recentes",
+    "noProjects": "Nenhum projeto cadastrado no momento.",
+    "startDesigning": "Toque em \"Criar Novo Projeto\" para começar a projetar na frente do cliente!",
+    "openProject": "Abrir",
+    "deleteProject": "Excluir",
+    "modulesCount_one": "{{count}} módulo",
+    "modulesCount_other": "{{count}} módulos",
+    "status": {
+      "draft": "Rascunho",
+      "approved": "Aprovado"
+    }
+  },
+  "newProject": {
+    "title": "Iniciar projeto",
+    "subtitle": "Insira os dados iniciais do cliente e do ambiente.",
+    "back": "← Cancelar",
+    "selectExistingClient": "Selecionar cliente existente",
+    "newClient": "-- Novo cliente --",
+    "clientCnpj": "CNPJ do Cliente (opcional)",
+    "clientCnpjPlaceholder": "00.000.000/0001-00",
+    "clientName": "Nome do Cliente",
+    "clientNamePlaceholder": "Ex: João Silva",
+    "clientCep": "CEP do Cliente (opcional)",
+    "clientCepPlaceholder": "00000-000",
+    "projectName": "Nome do Ambiente / Projeto",
+    "projectNamePlaceholder": "Ex: Cozinha Planejada L",
+    "selectEnvironment": "Selecione o Ambiente",
+    "environments": {
+      "cozinha": "Cozinha",
+      "dormitorio": "Dormitório",
+      "banheiro": "Banheiro",
+      "area_servico": "Área de Serviço",
+      "sala": "Sala de Estar"
+    },
+    "submit": "Avançar para Módulos",
+    "searching": "Buscando...",
+    "cepError": "CEP não encontrado",
+    "cnpjError": "CNPJ inválido ou não encontrado",
+    "cepFound": "✓ {{logradouro}}, {{bairro}} — {{localidade}}/{{uf}}",
+    "cnpjFound": "✓ {{razaoSocial}}"
+  },
+  "environment": {
+    "loading3D": "Carregando 3D…",
+    "backToHome": "Início",
+    "addModule": "Adicionar Módulo",
+    "editModule": "Editar Módulo",
+    "removeModule": "Remover Módulo",
+    "duplicateModule": "Duplicar Módulo",
+    "moveModule": "Mover Módulo",
+    "rotateModule": "Rotacionar Módulo",
+    "gapChange": "Alterar Vão",
+    "organize": "Organizar",
+    "organizeOptions": {
+      "encostar": "Encostar",
+      "distribuir": "Distribuir"
+    },
+    "addDecor": "Adicionar Decoração",
+    "moveDecor": "Mover Decoração",
+    "rotateDecor": "Rotacionar Decoração",
+    "removeDecor": "Remover Decoração",
+    "changeMaterial": "Alterar Material",
+    "toggleStatus": "Alterar Status",
+    "saveProject": "Salvar Projeto",
+    "projectSaved": "Projeto salvo com sucesso!",
+    "projectSaveError": "Erro ao salvar projeto",
+    "status": {
+      "draft": "Rascunho",
+      "approved": "Aprovado"
+    },
+    "viewMode": "Modo Visualização",
+    "readOnly": "Somente leitura - Link compartilhado"
+  },
+  "moduleAdjuster": {
+    "loading3D": "Carregando 3D…",
+    "save": "Salvar Módulo",
+    "cancel": "Cancelar",
+    "moduleName": "Nome do Módulo",
+    "dimensions": "Dimensões",
+    "width": "Largura",
+    "height": "Altura",
+    "depth": "Profundidade",
+    "material": "Material",
+    "hardware": "Ferragens",
+    "drawers": "Gavetas",
+    "doors": "Portas",
+    "shelves": "Prateleiras",
+    "addDrawer": "Adicionar Gaveta",
+    "addDoor": "Adicionar Porta",
+    "addShelf": "Adicionar Prateleira",
+    "remove": "Remover",
+    "position": "Posição",
+    "rotation": "Rotação"
+  },
+  "templateGrid": {
+    "title": "Biblioteca de Módulos",
+    "subtitle": "Escolha um template para começar",
+    "backLabel": "Projeto",
+    "categories": {
+      "base": "Base",
+      "wall": "Aéreo",
+      "tall": "Torre",
+      "corner": "Canto"
+    },
+    "searchPlaceholder": "Buscar módulos...",
+    "noResults": "Nenhum módulo encontrado"
+  },
+  "budget": {
+    "title": "Orçamento",
+    "subtitle": "Projeto: {{projectName}}",
+    "client": "Cliente: {{clientName}}",
+    "date": "Data: {{date}}",
+    "items": "Itens",
+    "quantity": "Qtd",
+    "unitPrice": "Preço Unit.",
+    "totalPrice": "Preço Total",
+    "materials": "Materiais",
+    "labor": "Mão de Obra",
+    "hardware": "Ferragens",
+    "subtotal": "Subtotal",
+    "discount": "Desconto",
+    "tax": "Impostos",
+    "total": "Total",
+    "generatePDF": "Gerar PDF",
+    "sendToClient": "Enviar ao Cliente",
+    "backToEnvironment": "Voltar ao Projeto",
+    "noItems": "Nenhum item no orçamento",
+    "addItem": "Adicionar Item",
+    "editItem": "Editar Item",
+    "removeItem": "Remover Item"
+  },
+  "settings": {
+    "title": "Configurações da Marcenaria",
+    "profiles": "Meus Perfis",
+    "newProfile": "Novo Perfil",
+    "profileName": "Nome do Perfil",
+    "setAsDefault": "Definir como Padrão",
+    "defaultProfile": "Perfil Padrão",
+    "deleteProfile": "Excluir Perfil",
+    "tabs": {
+      "rules": "Regras de Corte",
+      "materials": "Materiais",
+      "hardware": "Ferragens"
+    },
+    "rules": {
+      "title": "Regras de Corte",
+      "description": "Configure as folgas, vãos e espessuras que este perfil deve usar. Deixe o valor padrão caso não queira personalizar.",
+      "groups": {
+        "back": "Fundo",
+        "drawers": "Gavetas",
+        "doors": "Portas & Vãos",
+        "hinges": "Dobradiças",
+        "shelves": "Prateleiras & Chapa",
+        "topBase": "Tampo & Rodapé"
+      },
+      "defaultValue": "Padrão: {{value}} {{unit}}"
+    },
+    "materials": {
+      "title": "Materiais",
+      "defaultThickness": "Espessuras Padrão",
+      "carcassThickness": "Caixaria",
+      "frontThickness": "Frentes / Portas",
+      "carcassMaterial": "Material de Caixaria (Interno)",
+      "frontMaterial": "Material de Frentes (Externo)",
+      "backSystem": "Sistema de Fundo",
+      "backSystems": {
+        "rebaixo_parafusado": "Rebaixo Parafusado",
+        "encaixado_recuado": "Encaixado Recuado",
+        "parafusado_tras": "Parafusado na Traseira",
+        "fundo_espesso": "Fundo Espesso",
+        "sem_fundo": "Sem Fundo"
+      },
+      "backSystemDescriptions": {
+        "rebaixo_parafusado": "Fundo 6mm rebaixado na lateral, parafusado na traseira",
+        "encaixado_recuado": "Encaixe no rasgo sem parafuso",
+        "parafusado_tras": "Fundo colado e parafusado na traseira das laterais",
+        "fundo_espesso": "Fundo 18mm à mostra, aplicado na traseira",
+        "sem_fundo": "Módulo aberto na traseira (racks, painéis)"
+      }
+    },
+    "hardware": {
+      "title": "Ferragens",
+      "assemblySystem": "Esquema de Montagem",
+      "assemblySystems": {
+        "minifix": "Minifix + Cavilha",
+        "vb36": "VB36 (Excêntrico)",
+        "parafuso": "Parafuso Direto"
+      },
+      "assemblySystemDescriptions": {
+        "minifix": "Padrão da indústria. Desmontável. Requere furação CNC.",
+        "vb36": "Montagem rápida sem marcação. Alta resistência.",
+        "parafuso": "Mais simples, sem CNC. Para bancadas e estruturas."
+      },
+      "slideType": "Tipo de Corrediça (Gavetas)",
+      "slideTypes": {
+        "telescopica": "Telescópica",
+        "invisivel": "Invisível (Undermount)"
+      },
+      "slideTypeDescriptions": {
+        "telescopica": "TN, Hafele, FGV. Lateral visível. Padrão cozinha.",
+        "invisivel": "Blum Tandem, Grass. Totalmente oculta. Exige 15mm."
+      },
+      "hingeType": "Tipo de Dobradiça (Portas)",
+      "hingeTypes": {
+        "reta": "Reta (Sobreposta)",
+        "curva": "Curva (Semi-embutida)",
+        "super_curva": "Super Curva (Embutida)"
+      },
+      "hingeTypeDescriptions": {
+        "reta": "Porta passa sobre a lateral. Mais comum em cozinhas.",
+        "curva": "Meia sobra. Mistura porta sobreposta com embutida.",
+        "super_curva": "Porta rente à lateral. Visual mais clean."
+      },
+      "handleType": "Tipo de Puxador",
+      "handleTypes": {
+        "perfil_gola_anodizado": "Perfil Gola Anodizado",
+        "perfil_45_friso": "Perfil 45° com Friso",
+        "usinado_45": "Usinado 45°",
+        "passante": "Puxador Passante",
+        "alca_convencional": "Alça Convencional",
+        "tip_on": "Tip-On (Touch)"
+      },
+      "handleTypeDescriptions": {
+        "perfil_gola_anodizado": "Rometal. Integrado na frente, sem puxador saliente.",
+        "perfil_45_friso": "Recorte chanfrado com friso metálico.",
+        "usinado_45": "Recorte usinado na própria frente. Sem metal.",
+        "passante": "Parafuso na frente. Alumínio, inox ou madeira.",
+        "alca_convencional": "Puxador com castanho. TN, Hafele, FGV.",
+        "tip_on": "Sem puxador. Abre pressionando a frente."
+      }
+    },
+    "saveProfile": "Salvar Perfil",
+    "profileSaved": "Salvo!",
+    "language": "Idioma",
+    "selectLanguage": "Selecionar Idioma",
+    "languages": {
+      "pt": "Português (Brasil)",
+      "en": "English"
+    }
+  },
+  "errors": {
+    "networkError": "Erro de conexão. Verifique sua internet.",
+    "serverError": "Erro no servidor. Tente novamente mais tarde.",
+    "notFound": "Não encontrado",
+    "unauthorized": "Não autorizado. Faça login novamente.",
+    "forbidden": "Acesso negado",
+    "validationError": "Dados inválidos. Verifique os campos.",
+    "unknownError": "Ocorreu um erro inesperado"
+  },
+  "tooltips": {
+    "open": "Abrir",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "duplicate": "Duplicar",
+    "moveUp": "Mover para cima",
+    "moveDown": "Mover para baixo",
+    "rotate": "Rotacionar",
+    "settings": "Configurações",
+    "decrease": "Diminuir {{label}}",
+    "increase": "Aumentar {{label}}"
+  }
+}

@@ -1,7 +1,9 @@
 ﻿import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { registerSW } from 'virtual:pwa-register'
+import { I18nextProvider } from 'react-i18next'
 import './index.css'
+import './lib/i18n'
 import App from './App'
 import { ThemeProvider } from './components/ThemeProvider'
 
@@ -20,6 +22,8 @@ registerSW({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ThemeProvider defaultTheme="light"><App /></ThemeProvider>
+    <I18nextProvider i18n={await import('./lib/i18n').then(m => m.default)}>
+      <ThemeProvider defaultTheme="light"><App /></ThemeProvider>
+    </I18nextProvider>
   </StrictMode>,
 )

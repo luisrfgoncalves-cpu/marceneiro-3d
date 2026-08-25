@@ -1,0 +1,337 @@
+{
+  "common": {
+    "appName": "Carpenter 3D",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Confirm",
+    "close": "Close",
+    "settings": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "retry": "Retry",
+    "optional": "Optional",
+    "required": "Required"
+  },
+  "auth": {
+    "title": "Carpenter 3D",
+    "login": "Sign In",
+    "signup": "Create Account",
+    "email": "Email",
+    "password": "Password",
+    "emailPlaceholder": "you@email.com",
+    "passwordPlaceholder": "••••••••",
+    "passwordPlaceholderSignup": "Minimum 6 characters",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "createAccount": "Create account",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "demoMode": "Continue without account (demo mode)",
+    "demoDescription": "In demo mode projects are saved only on this device.",
+    "or": "or",
+    "loading": "Signing in...",
+    "creatingAccount": "Creating account...",
+    "errorInvalidCredentials": "Invalid email or password.",
+    "errorUserExists": "Email already registered. Please sign in.",
+    "errorPasswordShort": "Password must be at least 6 characters.",
+    "errorUnknown": "Unknown error",
+    "successAccountCreated": "Account created! Check your email to confirm and then sign in.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
+  },
+  "onboarding": {
+    "welcome": "Welcome to Carpenter 3D!",
+    "subtitle": "Create professional 3D projects in minutes",
+    "step1Title": "Quick Projects",
+    "step1Desc": "Choose ready templates or create from scratch",
+    "step2Title": "Precise Adjustments",
+    "step2Desc": "Modify dimensions, materials and hardware",
+    "step3Title": "Instant Quotes",
+    "step3Desc": "Generate quotes and PDFs for clients",
+    "getStarted": "Get Started",
+    "skip": "Skip"
+  },
+  "home": {
+    "greeting": "Hello, Carpenter! 👋",
+    "subtitle": "Manage your projects and impress clients with 3D proposals in seconds.",
+    "stats": {
+      "total": "Total",
+      "approved": "Approved",
+      "drafts": "Drafts"
+    },
+    "createProject": "Create New Project",
+    "recentProjects": "My Recent Projects",
+    "noProjects": "No projects yet.",
+    "startDesigning": "Tap \"Create New Project\" to start designing in front of your client!",
+    "openProject": "Open",
+    "deleteProject": "Delete",
+    "modulesCount_one": "{{count}} module",
+    "modulesCount_other": "{{count}} modules",
+    "status": {
+      "draft": "Draft",
+      "approved": "Approved"
+    }
+  },
+  "newProject": {
+    "title": "Start Project",
+    "subtitle": "Enter initial client and environment data.",
+    "back": "← Cancel",
+    "selectExistingClient": "Select existing client",
+    "newClient": "-- New client --",
+    "clientCnpj": "Client CNPJ (optional)",
+    "clientCnpjPlaceholder": "00.000.000/0001-00",
+    "clientName": "Client Name",
+    "clientNamePlaceholder": "Ex: John Smith",
+    "clientCep": "Client ZIP Code (optional)",
+    "clientCepPlaceholder": "00000-000",
+    "projectName": "Environment / Project Name",
+    "projectNamePlaceholder": "Ex: L-Shaped Kitchen",
+    "selectEnvironment": "Select Environment",
+    "environments": {
+      "cozinha": "Kitchen",
+      "dormitorio": "Bedroom",
+      "banheiro": "Bathroom",
+      "area_servico": "Laundry Room",
+      "sala": "Living Room"
+    },
+    "submit": "Continue to Modules",
+    "searching": "Searching...",
+    "cepError": "ZIP code not found",
+    "cnpjError": "Invalid or not found CNPJ",
+    "cepFound": "✓ {{logradouro}}, {{bairro}} — {{localidade}}/{{uf}}",
+    "cnpjFound": "✓ {{razaoSocial}}"
+  },
+  "environment": {
+    "loading3D": "Loading 3D…",
+    "backToHome": "Home",
+    "addModule": "Add Module",
+    "editModule": "Edit Module",
+    "removeModule": "Remove Module",
+    "duplicateModule": "Duplicate Module",
+    "moveModule": "Move Module",
+    "rotateModule": "Rotate Module",
+    "gapChange": "Change Gap",
+    "organize": "Organize",
+    "organizeOptions": {
+      "encostar": "Butt Joint",
+      "distribuir": "Distribute"
+    },
+    "addDecor": "Add Decoration",
+    "moveDecor": "Move Decoration",
+    "rotateDecor": "Rotate Decoration",
+    "removeDecor": "Remove Decoration",
+    "changeMaterial": "Change Material",
+    "toggleStatus": "Toggle Status",
+    "saveProject": "Save Project",
+    "projectSaved": "Project saved successfully!",
+    "projectSaveError": "Error saving project",
+    "status": {
+      "draft": "Draft",
+      "approved": "Approved"
+    },
+    "viewMode": "View Mode",
+    "readOnly": "Read only - Shared link"
+  },
+  "moduleAdjuster": {
+    "loading3D": "Loading 3D…",
+    "save": "Save Module",
+    "cancel": "Cancel",
+    "moduleName": "Module Name",
+    "dimensions": "Dimensions",
+    "width": "Width",
+    "height": "Height",
+    "depth": "Depth",
+    "material": "Material",
+    "hardware": "Hardware",
+    "drawers": "Drawers",
+    "doors": "Doors",
+    "shelves": "Shelves",
+    "addDrawer": "Add Drawer",
+    "addDoor": "Add Door",
+    "addShelf": "Add Shelf",
+    "remove": "Remove",
+    "position": "Position",
+    "rotation": "Rotation"
+  },
+  "templateGrid": {
+    "title": "Module Library",
+    "subtitle": "Choose a template to start",
+    "backLabel": "Project",
+    "categories": {
+      "base": "Base",
+      "wall": "Wall",
+      "tall": "Tall",
+      "corner": "Corner"
+    },
+    "searchPlaceholder": "Search modules...",
+    "noResults": "No modules found"
+  },
+  "budget": {
+    "title": "Budget",
+    "subtitle": "Project: {{projectName}}",
+    "client": "Client: {{clientName}}",
+    "date": "Date: {{date}}",
+    "items": "Items",
+    "quantity": "Qty",
+    "unitPrice": "Unit Price",
+    "totalPrice": "Total Price",
+    "materials": "Materials",
+    "labor": "Labor",
+    "hardware": "Hardware",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "tax": "Taxes",
+    "total": "Total",
+    "generatePDF": "Generate PDF",
+    "sendToClient": "Send to Client",
+    "backToEnvironment": "Back to Project",
+    "noItems": "No items in budget",
+    "addItem": "Add Item",
+    "editItem": "Edit Item",
+    "removeItem": "Remove Item"
+  },
+  "settings": {
+    "title": "Carpentry Settings",
+    "profiles": "My Profiles",
+    "newProfile": "New Profile",
+    "profileName": "Profile Name",
+    "setAsDefault": "Set as Default",
+    "defaultProfile": "Default Profile",
+    "deleteProfile": "Delete Profile",
+    "tabs": {
+      "rules": "Cut Rules",
+      "materials": "Materials",
+      "hardware": "Hardware"
+    },
+    "rules": {
+      "title": "Cut Rules",
+      "description": "Configure gaps, clearances and thicknesses for this profile. Leave default if you don't want to customize.",
+      "groups": {
+        "back": "Back",
+        "drawers": "Drawers",
+        "doors": "Doors & Gaps",
+        "hinges": "Hinges",
+        "shelves": "Shelves & Panels",
+        "topBase": "Top & Base"
+      },
+      "defaultValue": "Default: {{value}} {{unit}}"
+    },
+    "materials": {
+      "title": "Materials",
+      "defaultThickness": "Default Thicknesses",
+      "carcassThickness": "Carcass",
+      "frontThickness": "Fronts / Doors",
+      "carcassMaterial": "Carcass Material (Internal)",
+      "frontMaterial": "Front Material (External)",
+      "backSystem": "Back System",
+      "backSystems": {
+        "rebaixo_parafusado": "Rabbet Screwed",
+        "encaixado_recuado": "Recessed Dado",
+        "parafusado_tras": "Screwed to Back",
+        "fundo_espesso": "Thick Back",
+        "sem_fundo": "No Back"
+      },
+      "backSystemDescriptions": {
+        "rebaixo_parafusado": "6mm back rabbeted into side, screwed to back",
+        "encaixado_recuado": "Dado joint without screws",
+        "parafusado_tras": "Back glued and screwed to back of sides",
+        "fundo_espesso": "18mm thick back visible, applied to back",
+        "sem_fundo": "Module open at back (racks, panels)"
+      }
+    },
+    "hardware": {
+      "title": "Hardware",
+      "assemblySystem": "Assembly System",
+      "assemblySystems": {
+        "minifix": "Minifix + Dowel",
+        "vb36": "VB36 (Eccentric)",
+        "parafuso": "Direct Screw"
+      },
+      "assemblySystemDescriptions": {
+        "minifix": "Industry standard. Removable. Requires CNC drilling.",
+        "vb36": "Fast assembly without marking. High strength.",
+        "parafuso": "Simpler, no CNC. For countertops and structures."
+      },
+      "slideType": "Slide Type (Drawers)",
+      "slideTypes": {
+        "telescopica": "Telescopic",
+        "invisivel": "Undermount (Invisible)"
+      },
+      "slideTypeDescriptions": {
+        "telescopica": "TN, Hafele, FGV. Visible side. Kitchen standard.",
+        "invisivel": "Blum Tandem, Grass. Fully hidden. Requires 15mm."
+      },
+      "hingeType": "Hinge Type (Doors)",
+      "hingeTypes": {
+        "reta": "Full Overlay",
+        "curva": "Half Overlay",
+        "super_curva": "Inset"
+      },
+      "hingeTypeDescriptions": {
+        "reta": "Door overlaps side. Most common in kitchens.",
+        "curva": "Half overlay. Mix of overlay and inset.",
+        "super_curva": "Door flush with side. Cleaner look."
+      },
+      "handleType": "Handle Type",
+      "handleTypes": {
+        "perfil_gola_anodizado": "Anodized Gola Profile",
+        "perfil_45_friso": "45° Profile with Groove",
+        "usinado_45": "45° Machined",
+        "passante": "Through Handle",
+        "alca_convencional": "Conventional Pull",
+        "tip_on": "Tip-On (Touch)"
+      },
+      "handleTypeDescriptions": {
+        "perfil_gola_anodizado": "Rometal. Integrated into front, no protruding handle.",
+        "perfil_45_friso": "Chamfered cut with metal groove.",
+        "usinado_45": "Machined cut in front itself. No metal.",
+        "passante": "Screwed through front. Aluminum, stainless or wood.",
+        "alca_convencional": "Pull with base. TN, Hafele, FGV.",
+        "tip_on": "No handle. Opens by pressing front."
+      }
+    },
+    "saveProfile": "Save Profile",
+    "profileSaved": "Saved!",
+    "language": "Language",
+    "selectLanguage": "Select Language",
+    "languages": {
+      "pt": "Português (Brasil)",
+      "en": "English"
+    }
+  },
+  "errors": {
+    "networkError": "Connection error. Check your internet.",
+    "serverError": "Server error. Try again later.",
+    "notFound": "Not found",
+    "unauthorized": "Unauthorized. Please sign in again.",
+    "forbidden": "Access denied",
+    "validationError": "Invalid data. Check the fields.",
+    "unknownError": "An unexpected error occurred"
+  },
+  "tooltips": {
+    "open": "Open",
+    "delete": "Delete",
+    "edit": "Edit",
+    "duplicate": "Duplicate",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "rotate": "Rotate",
+    "settings": "Settings",
+    "decrease": "Decrease {{label}}",
+    "increase": "Increase {{label}}"
+  }
+}
