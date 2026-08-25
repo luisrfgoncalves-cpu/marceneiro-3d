@@ -8,7 +8,6 @@ create table if not exists "clientes" (
   "userId" text,
   created_at timestamptz not null default now()
 );
-
 -- Templates prontos do sistema (Seção 11.2) — ponto de partida de cada módulo.
 create table if not exists "modulo_templates" (
   id text primary key,
@@ -20,7 +19,6 @@ create table if not exists "modulo_templates" (
   ambiente_sugerido text,
   "userId" text
 );
-
 -- Templates pessoais do marceneiro (Seção 11.8) — vinculado à marcenaria/usuário.
 create table if not exists "marcenaria_templates" (
   id text primary key,
@@ -32,7 +30,6 @@ create table if not exists "marcenaria_templates" (
   "userId" text,
   created_at timestamptz not null default now()
 );
-
 -- Sugestões de módulos por ambiente (Seção 11.4 passo 2).
 create table if not exists "ambiente_sugestoes" (
   ambiente text not null,
@@ -40,17 +37,14 @@ create table if not exists "ambiente_sugestoes" (
   ordem integer not null default 0,
   primary key (ambiente, template_id)
 );
-
 alter table "clientes" enable row level security;
 alter table "modulo_templates" enable row level security;
 alter table "marcenaria_templates" enable row level security;
 alter table "ambiente_sugestoes" enable row level security;
-
 create policy "anon all clientes" on "clientes" for all to anon using (true) with check (true);
 create policy "anon all modulo_templates" on "modulo_templates" for all to anon using (true) with check (true);
 create policy "anon all marcenaria_templates" on "marcenaria_templates" for all to anon using (true) with check (true);
 create policy "anon all ambiente_sugestoes" on "ambiente_sugestoes" for all to anon using (true) with check (true);
-
 -- Seed de sugestões por ambiente (espelha src/engine/environment.ts)
 insert into "ambiente_sugestoes" (ambiente, template_id, ordem) values
   ('cozinha', 'balcao_2p_2g', 0),

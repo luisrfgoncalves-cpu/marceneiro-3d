@@ -52,18 +52,17 @@ Sem `.env`, o app roda **offline** com os valores padrão do domínio embarcados
 
 ## Supabase — Aplicar migrações
 
-As migrações estão em `supabase/migrations/` (0001_schema, 0002_seed, 0003_ux, 0004_ferragens, 0005_ambiente_decor).
+As migrações estão em `supabase/migrations/` (0001_schema, 0002_seed, 0003_ux, 0004_ferragens, 0005_ambiente_decor, 0006_rls_policies, 0007_public_sharing). O projeto já está linkado ao Supabase remoto — todas as migrações 0001→0007 estão aplicadas (verificar com `supabase migration list`).
 
-Opção A — **Dashboard SQL Editor** (recomendado):
-1. Abra o painel do Supabase > SQL Editor.
-2. Execute cada arquivo `.sql` em ordem (0001 → 0005).
-3. Verifique se as tabelas foram criadas e os seeds inseridos.
-
-Opção B — **CLI** (se tiver Docker):
+Opção A — **CLI** (recomendado, projeto já linkado):
 ```bash
-supabase link --project-ref <seu-project-ref>
-supabase db push --include-all
+supabase db push
 ```
+
+Opção B — **Dashboard SQL Editor**:
+1. Abra o painel do Supabase > SQL Editor.
+2. Execute cada arquivo `.sql` em ordem (0001 → 0007).
+3. Verifique se as tabelas foram criadas e os seeds inseridos.
 
 Tabelas principais: `regras_config`, `modulo_tipos`, `ambiente_regras_padrao`, `materiais`, `fitas_borda`, `pedras`, `ferragens`, `parafusos_fixacao`, `sistemas_montagem`, `projects`, `project_modules`, `project_module_pecas`, `clientes`, `marcenaria_templates`, `ambiente_sugestoes`.
 

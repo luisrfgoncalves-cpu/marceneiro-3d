@@ -10,7 +10,6 @@ insert into "regras_config" (id, "key", valor_padrao, editavel, unidade, descric
   ('regra_porta_remonte_montante_de_pe', 'porta.remonteMontanteDePe', 20, true, 'mm', 'Porta/frente remonta sobre montante de pé (Seção 5.9)'),
   ('regra_montante_mostra_de_pe', 'montante.mostraDePe', 30, true, 'mm', 'Montante de pé à mostra abaixo da porta (Seção 5.9)')
 on conflict ("key") do nothing;
-
 -- ---------------------------------------------------------------------------
 -- Novos tipos de módulo (Seção 11.2 / 6.1)
 -- ---------------------------------------------------------------------------
@@ -28,7 +27,6 @@ insert into "modulo_tipos" (id, nome, descricao, parametros, limites) values
    '{"largura":true,"altura":true,"profundidade":true,"portas":true,"prateleiras":true,"sistemaFundo":true}',
    '{"largura":{"min":1200,"max":4000},"altura":{"min":1800,"max":2700},"profundidade":{"min":500,"max":800}}')
 on conflict (id) do nothing;
-
 -- ---------------------------------------------------------------------------
 -- Materiais hidrófugo e ultra (Seção 3.1) + fitas 35/64mm (Seção 3.2)
 -- ---------------------------------------------------------------------------
@@ -36,13 +34,11 @@ insert into "materiais" (id, nome, tipo, espessura, fabricante, linha, cor, acab
   ('mdf_hidrofugo_verde_18mm', 'MDF Hidrófugo Verde 18mm', 'hidrofugo', 18, 'Duratex', 'Hidrófugo', 'Verde', 'fosco', 'dupla', 165),
   ('mdf_ultra_18mm', 'MDF Ultra 18mm', 'ultra', 18, 'Berneck', 'Ultra', 'Branco', 'fosco', 'dupla', 190)
 on conflict (id) do nothing;
-
 insert into "fitas_borda" (id, material_id, espessura, cor, fabricante, preco_unitario) values
   ('fita_proadec_35mm_maderado_x', 'mdf_maderado_x_18mm', 35, 'Maderado X', 'Proadec', 4.2),
   ('fita_proadec_64mm_maderado_x', 'mdf_maderado_x_18mm', 64, 'Maderado X', 'Proadec', 6.0),
   ('fita_proadec_35mm_branco_tx', 'mdf_branco_tx_18mm', 35, 'Branco TX', 'Proadec', 3.2)
 on conflict (id) do nothing;
-
 -- ---------------------------------------------------------------------------
 -- Ferragens (Seção 4) — corrediças por medida, puxadores por tipo e pistões
 -- ---------------------------------------------------------------------------

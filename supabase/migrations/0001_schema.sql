@@ -18,7 +18,6 @@ create table if not exists "regras_config" (
   "userId" text,
   updated_at timestamptz not null default now()
 );
-
 -- Catálogo de tipos de módulo + parâmetros permitidos e limites (min/max).
 create table if not exists "modulo_tipos" (
   id text primary key,
@@ -29,7 +28,6 @@ create table if not exists "modulo_tipos" (
   miniatura text,
   created_at timestamptz not null default now()
 );
-
 -- Regras padrão por ambiente (com/sem fundo, rodapé padrão, etc.).
 create table if not exists "ambiente_regras_padrao" (
   ambiente text primary key,
@@ -37,7 +35,6 @@ create table if not exists "ambiente_regras_padrao" (
   rodape_padrao text,
   regras jsonb not null default '{}'
 );
-
 -- Materiais: MDF/MDP/hidrófugo/ultra (Seção 3.1).
 create table if not exists "materiais" (
   id text primary key,
@@ -53,7 +50,6 @@ create table if not exists "materiais" (
   "userId" text,
   created_at timestamptz not null default now()
 );
-
 -- Fitas de borda (Seção 3.2) — sempre correspondentes à cor do MDF.
 create table if not exists "fitas_borda" (
   id text primary key,
@@ -64,7 +60,6 @@ create table if not exists "fitas_borda" (
   preco_unitario numeric,
   "userId" text
 );
-
 -- Pedras e mármores (Seção 3.3) — catálogo aberto.
 create table if not exists "pedras" (
   id text primary key,
@@ -73,7 +68,6 @@ create table if not exists "pedras" (
   espessuras numeric[] not null default '{}',
   preco_m2 numeric
 );
-
 -- Ferragens (Seção 4).
 create table if not exists "ferragens" (
   id text primary key,
@@ -85,7 +79,6 @@ create table if not exists "ferragens" (
   preco_unitario numeric,
   "userId" text
 );
-
 -- Tabela mestre de parafusos por junção (Seção 4.9).
 create table if not exists "parafusos_fixacao" (
   id text primary key,
@@ -94,7 +87,6 @@ create table if not exists "parafusos_fixacao" (
   tipo text,
   observacao text
 );
-
 -- Sistemas de montagem (Seção 5) — fundo e gaveta, com regras de folga/rebaixo.
 create table if not exists "sistemas_montagem" (
   id text primary key,
@@ -103,7 +95,6 @@ create table if not exists "sistemas_montagem" (
   regras jsonb not null default '{}',
   ativo boolean not null default true
 );
-
 -- Projetos (Seção 8 / 11.7) — sempre por ambiente, não peças avulsas.
 create table if not exists "projects" (
   id text primary key,
@@ -115,7 +106,6 @@ create table if not exists "projects" (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 -- Instância de módulo dentro de um projeto — config completa (JSON) + posição.
 create table if not exists "project_modules" (
   id text primary key,
@@ -125,7 +115,6 @@ create table if not exists "project_modules" (
   posicao jsonb not null default '{}', -- { x, y, rotacao } — Seção 11.9
   ordem integer not null default 0
 );
-
 -- Peças calculadas de cada módulo (Saída do motor — Seção 9).
 create table if not exists "project_module_pecas" (
   id text primary key,
@@ -138,11 +127,9 @@ create table if not exists "project_module_pecas" (
   veio text,
   created_at timestamptz not null default now()
 );
-
 create index if not exists idx_project_modules_project on "project_modules" (project_id);
 create index if not exists idx_pecas_module on "project_module_pecas" (module_id);
 create index if not exists idx_regras_user on "regras_config" ("userId");
-
 -- RLS habilitado com política aberta para anon (sem auth ainda — mesmo padrão
 -- do app irmão; isolamento por conta será aplicado com Auth em milestone futuro).
 alter table "regras_config" enable row level security;
@@ -157,12 +144,10 @@ alter table "sistemas_montagem" enable row level security;
 alter table "projects" enable row level security;
 alter table "project_modules" enable row level security;
 alter table "project_module_pecas" enable row level security;
-
 create policy "anon select regras_config" on "regras_config" for select to anon using (true);
 create policy "anon insert regras_config" on "regras_config" for insert to anon with check (true);
 create policy "anon update regras_config" on "regras_config" for update to anon using (true);
 create policy "anon delete regras_config" on "regras_config" for delete to anon using (true);
-
 create policy "anon all modulo_tipos" on "modulo_tipos" for all to anon using (true) with check (true);
 create policy "anon all ambiente_regras_padrao" on "ambiente_regras_padrao" for all to anon using (true) with check (true);
 create policy "anon all materiais" on "materiais" for all to anon using (true) with check (true);

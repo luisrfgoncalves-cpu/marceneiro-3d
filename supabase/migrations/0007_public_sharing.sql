@@ -1,4 +1,4 @@
-﻿-- 0006_public_sharing.sql
+﻿-- 0007_public_sharing.sql
 -- 1. Catalog tables select access to public (both anon and authenticated)
 drop policy if exists "anon all modulo_tipos" on "modulo_tipos";
 create policy "public select modulo_tipos" on "modulo_tipos" for select to public using (true);

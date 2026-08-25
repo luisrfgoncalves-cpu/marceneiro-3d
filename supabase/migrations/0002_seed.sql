@@ -47,7 +47,6 @@ insert into "regras_config" (id, "key", valor_padrao, editavel, unidade, descric
   ('regra_maleiro_frente_espessura', 'maleiro.frenteEspessura', 6, true, 'mm', 'Espessura da frente do maleiro (Seção 6.2)'),
   ('regra_sapateira_frente_altura', 'sapateira.frenteAltura', 45, true, 'mm', 'Altura da frente da sapateira (Seção 6.2)')
 on conflict ("key") do nothing;
-
 -- ---------------------------------------------------------------------------
 -- Tipos de módulo (catálogo + limites)
 -- ---------------------------------------------------------------------------
@@ -59,7 +58,6 @@ insert into "modulo_tipos" (id, nome, descricao, parametros, limites) values
    '{"largura":true,"altura":true,"profundidade":true,"gavetas":true,"orelhinha":true,"prateleiras":true,"sapateiras":true}',
    '{"largura":{"min":200,"max":1200},"altura":{"min":400,"max":2400},"profundidade":{"min":300,"max":700}}')
 on conflict (id) do nothing;
-
 -- ---------------------------------------------------------------------------
 -- Regras padrão por ambiente (Seção 6.3 / 11.4)
 -- ---------------------------------------------------------------------------
@@ -70,7 +68,6 @@ insert into "ambiente_regras_padrao" (ambiente, com_fundo, rodape_padrao, regras
   ('area_servico', false, 'pedra', '{"material": "MDF hidrofugo"}'),
   ('sala', true, 'mdf', '{}')
 on conflict (ambiente) do nothing;
-
 -- ---------------------------------------------------------------------------
 -- Tabela mestre de parafusos por junção (Seção 4.9)
 -- ---------------------------------------------------------------------------
@@ -83,7 +80,6 @@ insert into "parafusos_fixacao" (id, juncao, medida, tipo, observacao) values
   ('pf_montagem', 'montagem_geral', '3,5 × 40mm', 'parafuso', 'Montagem geral entre painéis (ou 4 × 40mm)'),
   ('pf_cavilha', 'reforco_alinhamento', '8mm × 5cm', 'cavilha', 'Reforço/alinhamento (ou 4,5cm)')
 on conflict (id) do nothing;
-
 -- ---------------------------------------------------------------------------
 -- Materiais (Seção 3.1) e fitas de borda (Seção 3.2) — referenciados pelos templates
 -- ---------------------------------------------------------------------------
@@ -95,12 +91,10 @@ insert into "materiais" (id, nome, tipo, espessura, fabricante, linha, cor, acab
   ('mdf_preto_18mm', 'MDF Preto 18mm', 'MDF', 18, 'Berneck', 'BP', 'Preto', 'fosco', 'dupla', 155),
   ('mdf_cinza_18mm', 'MDF Cinza 18mm', 'MDF', 18, 'Berneck', 'BP', 'Cinza', 'fosco', 'dupla', 140)
 on conflict (id) do nothing;
-
 insert into "fitas_borda" (id, material_id, espessura, cor, fabricante, preco_unitario) values
   ('fita_proadec_22mm_maderado_x', 'mdf_maderado_x_18mm', 22, 'Maderado X', 'Proadec', 3.5),
   ('fita_proadec_22mm_branco_tx', 'mdf_branco_tx_18mm', 22, 'Branco TX', 'Proadec', 2.5)
 on conflict (id) do nothing;
-
 -- ---------------------------------------------------------------------------
 -- Sistemas de montagem (Seção 5)
 -- ---------------------------------------------------------------------------
